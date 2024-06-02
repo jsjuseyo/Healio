@@ -153,6 +153,8 @@
 	[Parameter]
 	public string IdFormAktif { get; set; }
 
+	public List<uimT7Pemeriksaan_Diagnosa> DtDetilPemeriksaan_Diagnosa = new();
+	public List<uimT7Pemeriksaan_Tindakan> DtDetilPemeriksaan_Tindakan = new();
 
 	public List<uimT7Pembayaran> DtDetilPembayaran = new();
 	public List<T9DataOption> DtStatusPembayaran = new();
@@ -177,14 +179,15 @@
 	public override async void OnDataDipilih(Syncfusion.Blazor.Grids.RecordClickEventArgs<uimT6Pemeriksaan> args)
 	{
 		JudulDetil = $"MENGEDIT '{args.RowData.NoTransaksi}'";
-		var dtTindakan = await svcPembayaran.GetDetilPemeriksaan_Tindakan(args.RowData.IdPemeriksaan);
+		DtDetilPemeriksaan_Tindakan = await svcPembayaran.GetDetilPemeriksaan_Tindakan(args.RowData.IdPemeriksaan);
+		DtDetilPemeriksaan_Diagnosa = await svcPembayaran.GetDetilPemeriksaan_Diagnosa(args.RowData.IdPemeriksaan);
 		var dtResepObat = await svcResepObat.GetResepObatByIdPemeriksaan(args.RowData.IdPemeriksaan);
 		var dtDetilResepObat = new List<uimT7ResepObat>();
 		if(dtResepObat.Count > 0) dtDetilResepObat = await svcResepObat.GetDetilResepObat(dtResepObat.FirstOrDefault().IdResepObat);
 		//DtDetilResepObat = await svcPemeriksaan.GetDetilResepObat(args.RowData.IdResepObat);
 		if (DtDetilPembayaran.Count > 0) DtDetilPembayaran.Clear();
 		var nomor = 0;
-		foreach(var item in dtTindakan)
+		foreach (var item in DtDetilPemeriksaan_Tindakan)
 		{
 			nomor += 1;
 			DtDetilPembayaran.Add(new uimT7Pembayaran { 
@@ -235,6 +238,8 @@
 	public override async void OnSimpanData()
 	{
 		base.OnSimpanData();
+		DataDipilih.ListT7PemeriksaanDiagnosa = DtDetilPemeriksaan_Diagnosa;
+		DataDipilih.ListT7PemeriksaanTindakan = DtDetilPemeriksaan_Tindakan;
 		var reply = false;
 		
 		reply = await svcPembayaran.UpdatePemeriksaan(DataDipilih);
