@@ -1,0 +1,49 @@
+﻿@layout AuthLayout
+@page "/"
+@using Mapster;
+@using bwaPolaris.Components.Layout
+@inject NavigationManager NavigationManager
+@inject svcLogin svcLogin
+@inject svcBaseService bases
+@*DialogLogin*@
+<div id="target"></div>
+<SfDialog Target="#target" EnableResize="true" AllowDragging="true" ShowCloseIcon="true" Width="30%" MinHeight="@_minHeight" Visible="true" AllowPrerender="true" IsModal="true">
+    <DialogTemplates>
+        <Header>Login</Header>
+        <Content>
+            <SfTextBox Placeholder="Username" @bind-Value="@_username" ShowClearButton="true" FloatLabelType='@FloatLabelType.Auto'></SfTextBox>
+            <label hidden="@(!TampilkanErrorUsername)" style="margin-top: 0.5vh !important; color:red">@reply.Token</label>
+            <SfTextBox Placeholder="Password" @bind-Value="@_password" ShowClearButton="true" Type="Syncfusion.Blazor.Inputs.InputType.Password" FloatLabelType='@FloatLabelType.Auto'></SfTextBox>
+            <label hidden="@(!TampilkanErrorPassword)" style="margin-top: 1vh !important; color:red">@reply.Token</label>
+        </Content>
+    </DialogTemplates>
+    <DialogButtons>
+        <DialogButton IsPrimary="true" Content="Login" OnClick="@ProsesLogin" />
+    </DialogButtons>
+</SfDialog>
+@*DialogLogin*@
+@code {
+    public string _minHeight { get; set; } = "Auto";
+    public string _username { get; set; } = "";
+    public string _password { get; set; } = "";
+
+    public bool TampilkanErrorUsername = false;
+    public bool TampilkanErrorPassword = false;
+    RplLogin reply = new();
+    async void ProsesLogin()
+    {
+        reply = await svcLogin.OnLogin(_username, _password);
+        if (reply.IsOK)
+        {
+            bases.User = reply.Adapt<T9User>();
+            NavigationManager.NavigateTo("/index");
+        }
+        else
+        {
+            if (reply.Token.Contains("Password")) { TampilkanErrorPassword = true; TampilkanErrorUsername = false; }
+            else { TampilkanErrorUsername = true; TampilkanErrorPassword = false; }
+
+            StateHasChanged();
+        }
+    }
+}

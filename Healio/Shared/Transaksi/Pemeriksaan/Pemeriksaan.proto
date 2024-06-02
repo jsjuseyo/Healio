@@ -1,0 +1,219 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "bwaHealio.Shared";
+package TransaksiPemeriksaanPackage;
+
+import "google/protobuf/wrappers.proto";
+
+// Definisikan Pemeriksaan service.
+service svpTransaksiPemeriksaan {
+	rpc GetPemeriksaanById (RqsPemeriksaanById) returns (RplPemeriksaanById);
+	rpc GetPemeriksaan (RqsPemeriksaan) returns (RplPemeriksaan);
+	rpc GetPemeriksaanBelumLunas (RqsPemeriksaan) returns (RplPemeriksaan);
+
+    rpc GetDetilPemeriksaanDiagnosaById (RqsPemeriksaanById) returns (RplDetilPemeriksaanDiagnosaById);
+	rpc GetDetilPemeriksaanTindakanById (RqsPemeriksaanById) returns (RplDetilPemeriksaanTindakanById);
+
+	rpc GetDetilPemeriksaanDiagnosaByIdPasien (RqsDetilPemeriksaanByIdPasien) returns (RplDetilPemeriksaanDiagnosaById);
+	rpc GetDetilPemeriksaanTindakanByIdPasien (RqsDetilPemeriksaanByIdPasien) returns (RplDetilPemeriksaanTindakanById);
+
+    
+
+    rpc InsertPemeriksaan (RqsInsertPemeriksaan) returns (RplWritePemeriksaan);
+    rpc UpdatePemeriksaan (RqsUpdatePemeriksaan) returns (RplWritePemeriksaan);
+	rpc DeletePemeriksaan (RqsDeletePemeriksaan) returns (RplWritePemeriksaan);
+}
+
+message RqsPemeriksaanById {
+	string IdPemeriksaan = 1;
+}
+
+message RqsDetilPemeriksaanByIdPasien {
+	string IdPasien = 1;
+}
+
+message RplPemeriksaanById {
+    string IdPemeriksaan = 1;
+    google.protobuf.StringValue IdDokter = 2;
+    google.protobuf.StringValue IdPasien = 3;
+    optional string TanggalPemeriksaan = 4;
+    optional string TujuanPemeriksaan = 5;
+    optional string Gejala = 6;
+    optional string StatusPemeriksaan = 7;
+    optional string StatusPembayaran = 8;
+    optional double GrandTotal = 9;
+    optional string Dokter_Nama = 10;
+    optional string Dokter_TempatLahir = 11;
+    optional string Dokter_TanggalLahir = 12;
+    optional string Dokter_Alamat = 13;
+    optional string Dokter_Kode = 14;
+    optional string Dokter_Email = 15;
+    optional string Pasien_Nama = 16;
+    optional string Pasien_NIK = 17;
+    optional string Pasien_Alamat = 18;
+    optional string Pasien_NoTelepon = 19;
+    optional string Pasien_JenisKelamin = 20;
+    optional string Pasien_Pekerjaan = 21;
+    optional string Pasien_AlergiObat = 22;
+    optional string NoTransaksi = 23;
+    optional string Keterangan = 24;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RqsPemeriksaan {
+    string IdStaf = 1;
+    optional string TanggalFilterAwal = 4;
+    optional string TanggalFilterAkhir = 5;
+}
+
+message RplPemeriksaan {
+    repeated RplPemeriksaanById ListT6Pemeriksaan = 1;
+}
+
+message PtmDetilPemeriksaanDiagnosa {
+    string IdDetilPemeriksaan = 1;
+    optional string IdPemeriksaan = 2;
+    google.protobuf.StringValue IdDiagnosa = 3;
+    optional string Diagnosa_Nama = 4;
+    optional string Diagnosa_Kode = 5;
+    optional string Keterangan = 6;
+}
+
+message PtmDetilPemeriksaanTindakan {
+    string IdDetilPemeriksaan = 1;
+    optional string IdPemeriksaan = 2;
+    google.protobuf.StringValue IdTindakan = 3;
+    optional string Tindakan_Nama = 4;
+    optional string Tindakan_Kode = 5;
+    optional double Tindakan_Harga = 6;
+    optional string Keterangan = 7;
+}
+
+message RplDetilPemeriksaanDiagnosaById {
+	repeated PtmDetilPemeriksaanDiagnosa ListT7PemeriksaanDiagnosa = 1;
+}
+
+message RplDetilPemeriksaanTindakanById {
+	repeated PtmDetilPemeriksaanTindakan ListT7PemeriksaanTindakan = 1;
+}
+
+
+
+message RqsInsertPemeriksaan {
+    string IdPemeriksaan = 1;
+    google.protobuf.StringValue IdDokter = 2;
+    google.protobuf.StringValue IdPasien = 3;
+    optional string TanggalPemeriksaan = 4;
+    optional string TujuanPemeriksaan = 5;
+    optional string Gejala = 6;
+    optional string StatusPemeriksaan = 7;
+    optional string StatusPembayaran = 8;
+    optional double GrandTotal = 9;
+    optional string Dokter_Nama = 10;
+    optional string Dokter_TempatLahir = 11;
+    optional string Dokter_TanggalLahir = 12;
+    optional string Dokter_Alamat = 13;
+    optional string Dokter_Kode = 14;
+    optional string Dokter_Email = 15;
+    optional string Pasien_Nama = 16;
+    optional string Pasien_NIK = 17;
+    optional string Pasien_Alamat = 18;
+    optional string Pasien_NoTelepon = 19;
+    optional string Pasien_JenisKelamin = 20;
+    optional string Pasien_Pekerjaan = 21;
+    optional string Pasien_AlergiObat = 22;
+    optional string NoTransaksi = 23;
+    optional string Keterangan = 24;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+	
+    repeated PtmDetilPemeriksaanDiagnosa ListT7PemeriksaanDiagnosa = 201;
+    repeated PtmDetilPemeriksaanTindakan ListT7PemeriksaanTindakan = 202;
+}
+
+message RqsUpdatePemeriksaan {
+    string IdPemeriksaan = 1;
+    google.protobuf.StringValue IdDokter = 2;
+    google.protobuf.StringValue IdPasien = 3;
+    optional string TanggalPemeriksaan = 4;
+    optional string TujuanPemeriksaan = 5;
+    optional string Gejala = 6;
+    optional string StatusPemeriksaan = 7;
+    optional string StatusPembayaran = 8;
+    optional double GrandTotal = 9;
+    optional string Dokter_Nama = 10;
+    optional string Dokter_TempatLahir = 11;
+    optional string Dokter_TanggalLahir = 12;
+    optional string Dokter_Alamat = 13;
+    optional string Dokter_Kode = 14;
+    optional string Dokter_Email = 15;
+    optional string Pasien_Nama = 16;
+    optional string Pasien_NIK = 17;
+    optional string Pasien_Alamat = 18;
+    optional string Pasien_NoTelepon = 19;
+    optional string Pasien_JenisKelamin = 20;
+    optional string Pasien_Pekerjaan = 21;
+    optional string Pasien_AlergiObat = 22;
+    optional string NoTransaksi = 23;
+    optional string Keterangan = 24;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+	
+    repeated PtmDetilPemeriksaanDiagnosa ListT7PemeriksaanDiagnosa = 201;
+    repeated PtmDetilPemeriksaanTindakan ListT7PemeriksaanTindakan = 202;
+
+}
+
+message RqsDeletePemeriksaan {
+    string IdPemeriksaan = 1;
+    google.protobuf.StringValue IdDokter = 2;
+    google.protobuf.StringValue IdPasien = 3;
+    optional string TanggalPemeriksaan = 4;
+    optional string TujuanPemeriksaan = 5;
+    optional string Gejala = 6;
+    optional string StatusPemeriksaan = 7;
+    optional string StatusPembayaran = 8;
+    optional double GrandTotal = 9;
+    optional string Dokter_Nama = 10;
+    optional string Dokter_TempatLahir = 11;
+    optional string Dokter_TanggalLahir = 12;
+    optional string Dokter_Alamat = 13;
+    optional string Dokter_Kode = 14;
+    optional string Dokter_Email = 15;
+    optional string Pasien_Nama = 16;
+    optional string Pasien_NIK = 17;
+    optional string Pasien_Alamat = 18;
+    optional string Pasien_NoTelepon = 19;
+    optional string Pasien_JenisKelamin = 20;
+    optional string Pasien_Pekerjaan = 21;
+    optional string Pasien_AlergiObat = 22;
+    optional string NoTransaksi = 23;
+    optional string Keterangan = 24;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+	
+    repeated PtmDetilPemeriksaanDiagnosa ListT7PemeriksaanDiagnosa = 201;
+    repeated PtmDetilPemeriksaanTindakan ListT7PemeriksaanTindakan = 202;
+}
+
+message RplWritePemeriksaan {
+    bool IsOK = 1;
+	string Result = 2;
+}

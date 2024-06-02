@@ -1,0 +1,204 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "bwaHealio.Shared";
+package TransaksiResepObatPackage;
+
+import "google/protobuf/wrappers.proto";
+
+// Definisikan ResepObat service.
+service svpTransaksiResepObat {
+	rpc GetResepObat (RqsResepObat) returns (RplResepObat);
+    rpc GetResepObatByIdPemeriksaan (RqsResepObatByIdPemeriksaan) returns (RplResepObat);
+
+	rpc GetDetilResepObatById (RqsDetilResepObatById) returns (RplDetilResepObatById);
+	rpc GetDetilResepObatByIdPasien (RqsResepObatByIdPasien) returns (RplDetilResepObatById);
+	
+    rpc InsertResepObat (RqsInsertResepObat) returns (RplWriteResepObat);
+    rpc UpdateResepObat (RqsUpdateResepObat) returns (RplWriteResepObat);
+	rpc DeleteResepObat (RqsDeleteResepObat) returns (RplWriteResepObat);
+}
+
+message RqsResepObatByIdPemeriksaan {
+	string IdPemeriksaan = 1;
+}
+
+message RqsResepObatByIdPasien {
+	string IdPasien = 1;
+}
+
+message RplResepObatById {
+    string IdResepObat = 1;
+    google.protobuf.StringValue IdPemeriksaan = 2;
+    google.protobuf.StringValue IdDokter = 3;
+    google.protobuf.StringValue IdPasien = 4;
+    optional string TanggalResep = 5;
+    optional string Referensi_NoPemeriksaan = 6;
+    optional string Dokter_Nama = 7;
+    optional string Dokter_TempatLahir = 8;
+    optional string Dokter_TanggalLahir = 9;
+    optional string Dokter_Alamat = 10;
+    optional string Dokter_Kode = 11;
+    optional string Dokter_Email = 12;
+    optional string Pasien_Nama = 13;
+    optional string Pasien_NIK = 14;
+    optional string Pasien_Alamat = 15;
+    optional string Pasien_NoTelepon = 16;
+    optional string Pasien_JenisKelamin = 17;
+    optional string Pasien_Pekerjaan = 18;
+    optional string Pasien_AlergiObat = 19;
+    optional string NoTransaksi = 20;
+    optional string Keterangan = 21;
+    optional string Status = 22;
+    optional double GrandTotal = 23;
+
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RqsResepObat {
+    string IdStaf = 1;
+    optional string TanggalFilterAwal = 4;
+    optional string TanggalFilterAkhir = 5;
+}
+message RplResepObat {
+    repeated RplResepObatById ListT6ResepObat = 1;
+}
+
+message RqsDetilResepObatById {
+    string IdResepObat = 1;
+}
+message PtmDetilResepObat {
+    string IdDetilResepObat = 1;
+    optional string IdResepObat = 2;
+    google.protobuf.StringValue IdObat = 3;
+    optional string Dosis = 4;
+    optional string Frekuensi = 5;
+    optional string Durasi = 6;
+    optional int32 Jumlah = 7;
+    optional string Obat_Nama = 8;
+    optional string Obat_Kode = 9;
+    optional double Obat_Harga = 10;
+    optional string Keterangan = 11;
+    optional double Total = 12;
+
+	string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RplDetilResepObatById {
+	repeated PtmDetilResepObat ListT7ResepObat = 1;
+}
+
+message RqsInsertResepObat {
+    string IdResepObat = 1;
+    google.protobuf.StringValue IdPemeriksaan = 2;
+    google.protobuf.StringValue IdDokter = 3;
+    google.protobuf.StringValue IdPasien = 4;
+    optional string TanggalResep = 5;
+    optional string Referensi_NoPemeriksaan = 6;
+    optional string Dokter_Nama = 7;
+    optional string Dokter_TempatLahir = 8;
+    optional string Dokter_TanggalLahir = 9;
+    optional string Dokter_Alamat = 10;
+    optional string Dokter_Kode = 11;
+    optional string Dokter_Email = 12;
+    optional string Pasien_Nama = 13;
+    optional string Pasien_NIK = 14;
+    optional string Pasien_Alamat = 15;
+    optional string Pasien_NoTelepon = 16;
+    optional string Pasien_JenisKelamin = 17;
+    optional string Pasien_Pekerjaan = 18;
+    optional string Pasien_AlergiObat = 19;
+    optional string NoTransaksi = 20;
+    optional string Keterangan = 21;
+    optional double GrandTotal = 22;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+	
+    repeated PtmDetilResepObat ListT7ResepObat = 201;
+}
+
+message RqsUpdateResepObat {
+    string IdResepObat = 1;
+    google.protobuf.StringValue IdPemeriksaan = 2;
+    google.protobuf.StringValue IdDokter = 3;
+    google.protobuf.StringValue IdPasien = 4;
+    optional string TanggalResep = 5;
+    optional string Referensi_NoPemeriksaan = 6;
+    optional string Dokter_Nama = 7;
+    optional string Dokter_TempatLahir = 8;
+    optional string Dokter_TanggalLahir = 9;
+    optional string Dokter_Alamat = 10;
+    optional string Dokter_Kode = 11;
+    optional string Dokter_Email = 12;
+    optional string Pasien_Nama = 13;
+    optional string Pasien_NIK = 14;
+    optional string Pasien_Alamat = 15;
+    optional string Pasien_NoTelepon = 16;
+    optional string Pasien_JenisKelamin = 17;
+    optional string Pasien_Pekerjaan = 18;
+    optional string Pasien_AlergiObat = 19;
+    optional string NoTransaksi = 20;
+    optional string Keterangan = 21;
+    optional string Status = 22;
+    optional double GrandTotal = 23;
+
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+	
+    repeated PtmDetilResepObat ListT7ResepObat = 301;
+}
+
+message RqsDeleteResepObat {
+    string IdResepObat = 1;
+    google.protobuf.StringValue IdPemeriksaan = 2;
+    google.protobuf.StringValue IdDokter = 3;
+    google.protobuf.StringValue IdPasien = 4;
+    optional string TanggalResep = 5;
+    optional string Referensi_NoPemeriksaan = 6;
+    optional string Dokter_Nama = 7;
+    optional string Dokter_TempatLahir = 8;
+    optional string Dokter_TanggalLahir = 9;
+    optional string Dokter_Alamat = 10;
+    optional string Dokter_Kode = 11;
+    optional string Dokter_Email = 12;
+    optional string Pasien_Nama = 13;
+    optional string Pasien_NIK = 14;
+    optional string Pasien_Alamat = 15;
+    optional string Pasien_NoTelepon = 16;
+    optional string Pasien_JenisKelamin = 17;
+    optional string Pasien_Pekerjaan = 18;
+    optional string Pasien_AlergiObat = 19;
+    optional string NoTransaksi = 20;
+    optional string Keterangan = 21;
+    optional string Status = 22;
+    optional double GrandTotal = 23;
+
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+	
+    repeated PtmDetilResepObat ListT7ResepObat = 301;
+}
+
+message RplWriteResepObat {
+    bool IsOK = 1;
+	string Result = 2;
+}

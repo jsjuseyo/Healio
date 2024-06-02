@@ -1,0 +1,85 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "bwaHealio.Shared";
+
+import "google/protobuf/wrappers.proto";
+
+// Definisikan Tindakan service.
+service svpMasterTindakan {
+	rpc GetTindakanById (RqsTindakanById) returns (RplTindakanById);
+	rpc GetTindakan (RqsTindakan) returns (RplTindakan);
+	
+    rpc InsertTindakan (RqsInsertTindakan) returns (RplWriteTindakan);
+    rpc UpdateTindakan (RqsUpdateTindakan) returns (RplWriteTindakan);
+	rpc DeleteTindakan (RqsDeleteTindakan) returns (RplWriteTindakan);
+}
+
+message RqsTindakanById {
+	string IdTindakan = 1;
+}
+message RplTindakanById {
+    string IdTindakan = 1;
+    string Nama = 2;
+    optional string Kode = 3;
+    optional double Harga = 4;
+    optional string Keterangan = 5;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RqsTindakan {
+}
+message RplTindakan {
+    repeated RplTindakanById ListT0Tindakan = 1;
+}
+
+message RqsInsertTindakan {
+    string IdTindakan = 1;
+    string Nama = 2;
+    optional string Kode = 3;
+    optional double Harga = 4;
+    optional string Keterangan = 5;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RqsUpdateTindakan {
+    string IdTindakan = 1;
+    string Nama = 2;
+    optional string Kode = 3;
+    optional double Harga = 4;
+    optional string Keterangan = 5;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RqsDeleteTindakan {
+    string IdTindakan = 1;
+    string Nama = 2;
+    optional string Kode = 3;
+    optional double Harga = 4;
+    optional string Keterangan = 5;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RplWriteTindakan {
+    bool IsOK = 1;
+	string Result = 2;
+}

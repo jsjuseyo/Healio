@@ -1,0 +1,105 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "bwaHealio.Shared";
+
+import "google/protobuf/wrappers.proto";
+
+// Definisikan Pasien service.
+service svpMasterPasien {
+	rpc GetPasienById (RqsPasienById) returns (RplPasienById);
+	rpc GetPasien (RqsPasien) returns (RplPasien);
+	
+    rpc InsertPasien (RqsInsertPasien) returns (RplWritePasien);
+    rpc UpdatePasien (RqsUpdatePasien) returns (RplWritePasien);
+	rpc DeletePasien (RqsDeletePasien) returns (RplWritePasien);
+}
+
+message RqsPasienById {
+	string IdPasien = 1;
+}
+message RplPasienById {
+    string IdPasien = 1;
+    string Nama = 2;
+    string NIK = 3;
+    string Alamat = 4;
+    string NoTelepon = 5;
+    optional string JenisKelamin = 6;
+    optional string Pekerjaan = 7;
+    optional string AlergiObat = 8;
+    optional string Kode = 9;
+    optional string Keterangan = 10;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RqsPasien {
+}
+message RplPasien {
+    repeated RplPasienById ListT0Pasien = 1;
+}
+
+message RqsInsertPasien {
+    string IdPasien = 1;
+    string Nama = 2;
+    string NIK = 3;
+    string Alamat = 4;
+    string NoTelepon = 5;
+    optional string JenisKelamin = 6;
+    optional string Pekerjaan = 7;
+    optional string AlergiObat = 8;
+    optional string Kode = 9;
+    optional string Keterangan = 10;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RqsUpdatePasien {
+    string IdPasien = 1;
+    string Nama = 2;
+    string NIK = 3;
+    string Alamat = 4;
+    string NoTelepon = 5;
+    optional string JenisKelamin = 6;
+    optional string Pekerjaan = 7;
+    optional string AlergiObat = 8;
+    optional string Kode = 9;
+    optional string Keterangan = 10;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RqsDeletePasien {
+    string IdPasien = 1;
+    string Nama = 2;
+    string NIK = 3;
+    string Alamat = 4;
+    string NoTelepon = 5;
+    optional string JenisKelamin = 6;
+    optional string Pekerjaan = 7;
+    optional string AlergiObat = 8;
+    optional string Kode = 9;
+    optional string Keterangan = 10;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RplWritePasien {
+    bool IsOK = 1;
+	string Result = 2;
+}

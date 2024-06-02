@@ -1,0 +1,120 @@
+﻿@page "/farmasi/{IdFormAktif}"
+@using DevExpress.Blazor
+@using Healio.Shared
+@using System.Reflection
+@using Radzen
+@using Radzen.Blazor
+@using Syncfusion.Blazor.Data;
+@using bwaPolaris.Shared
+@using Toolbelt.Blazor.SpeechSynthesis
+@inject SpeechSynthesis Speech
+@inject svcResepObat svcResepObat
+@inject svcPasien svcPasien
+@inject svcStaf svcStaf
+@inject svcDiagnosa svcDiagnosa
+@inject svcTindakan svcTindakan
+@inject svcObat svcObat
+@inherits Container_1<uimT6ResepObat, svcResepObat>
+
+@{
+	base.BuildRenderTree(__builder);
+	rfColumn =
+	@<div>
+		<GridColumn Field="@nameof(uimT6ResepObat.Opsi)" HeaderText="Opsi" Context="dtContext">
+			<Template>
+				@{
+					var data = dtContext as uimT6ResepObat;
+					<MudIconButton OnClick="(() => OnPanggilPasien(data.Pasien_Nama, data.NoTransaksi))" Icon="@Icons.Material.Filled.Mic" Variant="MudBlazor.Variant.Filled" Color="Color.Info" Size="Size.Small" />
+				}
+			</Template>
+		</GridColumn>
+	</div>;
+			;
+	rfDetil =
+	@<div>
+		<div class="row">
+			<div class="col-md-6">
+				<SfTextBox Placeholder="Nama Pasien" @bind-Value="@DataDipilih.Pasien_Nama" Enabled="false" FloatLabelType='@FloatLabelType.Auto' />
+			</div>
+			<div class="col-md-6">
+				<SfTextBox Placeholder="Nama Dokter" @bind-Value="@DataDipilih.Dokter_Nama" Enabled="false" FloatLabelType='@FloatLabelType.Auto' />
+			</div>
+			<div style="margin-top: 5vh">
+				<h5>Detil Obat</h5>
+				<bwaPolaris.Control.CustomGrid GridData="DtDetilResepObat" GridIdForm="100202-03" IdData="Detil Obat">
+				</bwaPolaris.Control.CustomGrid>
+			</div>
+		</div>
+	</div>;
+}
+
+@code {
+	[Parameter]
+	public string IdFormAktif { get; set; }
+
+
+	public List<uimT7ResepObat> DtDetilResepObat = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		IdData = "ResepObat";
+		IdForm = IdFormAktif;
+		dsRekapitulasi = new List<uimT6ResepObat>();
+		dsRekapitulasi = await svcResepObat.GetResepObat();
+
+		DataDipilih = new();
+		DtDetilResepObat = new();
+		JudulDetil = "";
+		this.StateHasChanged();
+	}
+
+	public override async void OnDataDipilih(Syncfusion.Blazor.Grids.RecordClickEventArgs<uimT6ResepObat> args)
+	{
+		JudulDetil = $"MENGEDIT '{args.RowData.NoTransaksi}'";
+		DtDetilResepObat = await svcResepObat.GetDetilResepObat(args.RowData.IdResepObat);
+
+		base.OnDataDipilih(args);
+	}
+
+	public override async void OnSimpanData()
+	{
+		base.OnSimpanData();
+		var reply = false;
+		DataDipilih.Status = "Selesai";
+		DataDipilih.ListT7ResepObat = DtDetilResepObat;
+		reply = await svcResepObat.UpdateResepObat(DataDipilih);
+		if (reply)
+		{
+			await OnInitializedAsync();
+		}
+	}
+
+	public override async void OnHapusData()
+	{
+
+		base.OnHapusData();
+		var reply = await svcResepObat.DeleteResepObat(DataDipilih);
+		if (reply)
+		{
+			await OnInitializedAsync();
+		}
+	}
+	public override void OnBatal_SimpanData()
+	{
+		base.OnBatal_SimpanData();
+		DataDipilih = new();
+	}
+
+	public async Task OnPanggilPasien(string? nama, string noTransaksi)
+	{
+		var utterancet = new SpeechSynthesisUtterance
+			{
+				Text = $"Kepada saudara {nama}, silahkan menghampiri loket pengambilan obat. Terimakasih.",
+				Lang = "id-ID", // BCP 47 language tag
+				Pitch = 1.0, // 0.0 ~ 2.0 (Default 1.0)
+				Rate = 1.0, // 0.1 ~ 10.0 (Default 1.0)
+				Volume = 1.0, // 0.0 ~ 1.0 (Default 1.0)
+			};
+		await Speech.SpeakAsync(utterancet);
+	}
+}

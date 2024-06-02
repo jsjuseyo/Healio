@@ -1,0 +1,84 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "bwaHealio.Shared";
+package MasterObatPackage;
+
+import "google/protobuf/wrappers.proto";
+
+// Definisikan Obat service.
+service svpMasterObat {
+	rpc GetObatById (RqsObatById) returns (RplObatById);
+	rpc GetObat (RqsObat) returns (RplObat);
+	
+    rpc InsertObat (RqsInsertObat) returns (RplWriteObat);
+    rpc UpdateObat (RqsUpdateObat) returns (RplWriteObat);
+	rpc DeleteObat (RqsDeleteObat) returns (RplWriteObat);
+}
+
+message RqsObatById {
+	string IdObat = 1;
+}
+message RplObatById {
+    string IdObat = 1;
+    string Nama = 2;
+    optional string Kode = 3;
+    optional double Harga = 4;
+    optional string Keterangan = 5;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RqsObat {
+}
+message RplObat {
+    repeated RplObatById ListT0Obat = 1;
+}
+
+message RqsInsertObat {
+    string IdObat = 1;
+    string Nama = 2;
+    optional string Kode = 3;
+    optional double Harga = 4;
+    optional string Keterangan = 5;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RqsUpdateObat {
+    string IdObat = 1;
+    string Nama = 2;
+    optional string Kode = 3;
+    optional double Harga = 4;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RqsDeleteObat {
+    string IdObat = 1;
+    string Nama = 2;
+    optional string Kode = 3;
+    optional double Harga = 4;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RplWriteObat {
+    bool IsOK = 1;
+	string Result = 2;
+}

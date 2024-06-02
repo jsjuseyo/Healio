@@ -1,0 +1,307 @@
+﻿@page "/staf/{IdFormAktif}"
+@using DevExpress.Blazor
+@using Radzen
+@using Radzen.Blazor
+@using Syncfusion.Blazor.Data;
+@using bwaPolaris.Shared
+@inject svcStaf svcStaf
+@inject svcJabatan svcJabatan
+@inject svcPrivileges svcPrivileges
+@inherits Container_1<uimT1Staf, svcStaf>
+
+@{
+	base.BuildRenderTree(__builder);
+	rfGrid_Detil = @<GridTemplates>
+		<DetailTemplate>
+			@{
+		var item = (context as uimT1Staf);
+				<SfGrid RowRenderingMode="@RowDirection.Vertical" EnableAdaptiveUI="true" DataSource="@dsRekapitulasi" Query="@(new Syncfusion.Blazor.Data.Query().Where("IdStaf", "equal", item.IdStaf))">
+					<GridColumns>
+						@foreach (var item in AtributForm.Where(x => x.TampilMobile == false))
+						{
+							<GridColumn TextAlign="Syncfusion.Blazor.Grids.TextAlign.Center" Field="@item.Field" HeaderText="@item.CaptionRekapitulasi"></GridColumn>
+						}
+					</GridColumns>
+				</SfGrid>
+			}
+		</DetailTemplate>
+	</GridTemplates>
+			;
+	rfDetil =
+	@<SfTab OverflowMode="OverflowMode.Scrollable">
+		<TabItems>
+			<TabItem>
+				<ChildContent>
+					<TabHeader Text="Identitas"></TabHeader>
+				</ChildContent>
+				<ContentTemplate>
+					<div class="row">
+						<div class="col-md-6">
+							<SfTextBox Placeholder="Nama" @bind-Value="@DataDipilih.Nama" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+							<ValidationMessage For="@(() => DataDipilih.Nama)"></ValidationMessage>
+						</div>
+						<div class="col-md-6">
+							<SfTextBox Placeholder="Tempat Lahir" @bind-Value="@DataDipilih.TempatLahir" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+							<ValidationMessage For="@(() => DataDipilih.TempatLahir)"></ValidationMessage>
+						</div>
+						<div class="col-md-6">
+							<SfDatePicker Placeholder="Tanggal Lahir" @bind-Value="@DataDipilih.TanggalLahir" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+							<ValidationMessage For="@(() => DataDipilih.TanggalLahir)"></ValidationMessage>
+						</div>
+						<div class="col-md-6">
+							<SfTextBox Placeholder="Email" @bind-Value="@DataDipilih.Email" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+							<ValidationMessage For="@(() => DataDipilih.Email)"></ValidationMessage>
+						</div>
+						<div class="col-md-6">
+							<SfTextBox Multiline="true" Placeholder="Alamat" @bind-Value="@DataDipilih.Alamat" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+							<ValidationMessage For="@(() => DataDipilih.Alamat)"></ValidationMessage>
+						</div>
+						<div class="col-md-6">
+							<SfTextBox Multiline="true" Placeholder="Keterangan" @bind-Value="@DataDipilih.Keterangan" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+							<ValidationMessage For="@(() => DataDipilih.Keterangan)"></ValidationMessage>
+						</div>
+					</div>
+				</ContentTemplate>
+			</TabItem>
+			<TabItem>
+				<ChildContent>
+					<TabHeader Text="Jabatan"></TabHeader>
+				</ChildContent>
+				<ContentTemplate>
+					<div style="min-height:90vh !important;">
+						@if(TampilkanFormJabatan){
+							<div style="margin-top: 1vh !important; margin-bottom: 3vh !important;">
+								<SfCard>
+									<CardHeader Title="Kelola Detil Jabatan" />
+									<CardContent>
+										<EditForm Model="@drJabatan" OnValidSubmit="@GrdDetilJabatan_Simpan">
+											<div class="form-group">
+												<label class="form-group" style="margin-bottom: 1vh !important;">Jabatan</label><br />
+												<RadzenDropDownDataGrid Value=@drJabatan.IdJabatan
+																		Data=@_dtjabatan
+																		TextProperty="Jabatan"
+																		ValueProperty="IdJabatan"
+																		AllowColumnResize="true"
+																		AllowFilteringByAllStringColumns="true"
+																		FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+																		FilterOperator="StringFilterOperator.Contains"
+																		AllowFiltering="true"
+																		AllowVirtualization="true"
+																		ValueChanged="@((Guid idJabatan) => CmbJabatan_Dipilih(idJabatan))">
+													<Columns>
+														<RadzenDropDownDataGridColumn Property="Jabatan" Title="Jabatan" />
+														<RadzenDropDownDataGridColumn Property="Kode" Title="Kode" />
+													</Columns>
+												</RadzenDropDownDataGrid>
+											</div>
+											<div class="form-group" style="margin-top: 2vh !important;">
+												<MudButton ButtonType="MudBlazor.ButtonType.Submit" Variant="MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Info" Size="Size.Small">Simpan</MudButton>
+												<MudButton Variant="MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel" IconColor="Color.Surface" Size="Size.Small" OnClick="GrdDetilJabatan_Batal"> Batal</MudButton>
+											</div>
+										</EditForm>
+									</CardContent>
+								</SfCard>
+							</div>
+						}
+						<div style="margin-top: 1vh !important; margin-bottom: 1vh !important">
+							<MudButton Variant="MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.OpenInBrowser" Color="Color.Info" OnClick="OnTampilkanFormJabatan">@TextButtonDetilJabatan</MudButton>
+						</div>
+						<DxGrid Data="@_dtDetilJabatan" KeyboardNavigationEnabled="true" AllowSelectRowByClick="true" AllowColumnReorder="true" AllowSort="true" ShowFilterRow="true"
+							SelectionMode="GridSelectionMode.Single" SelectedDataItemChanged="@GrdDetilJabatan_DataDipilih">
+							<Columns>
+								@foreach(var item in _dtGrdDetilJabatan_AtributForm){
+									<DxGridDataColumn FieldName="@item.Field" Caption="@item.CaptionRekapitulasi" Visible="@item.TampilRekapitulasi" />
+								}
+							</Columns>
+						</DxGrid>
+					</div>
+				</ContentTemplate>
+			</TabItem>
+			<TabItem Visible="@DiperbolehkanEditPrivilege">
+				<ChildContent>
+					<TabHeader Text="Privileges"></TabHeader>
+				</ChildContent>
+				<ContentTemplate>
+					<bwaPolaris.Control.CustomGrid GridIdForm="1001-03-02" IdData="Privilege" GridData="@_dtPrivilege">
+						<GridColumn>
+							<GridForeignColumn TextAlign="Syncfusion.Blazor.Grids.TextAlign.Center" Field=@nameof(T9Privileges.IdForm) HeaderText="Nama Form" ForeignKeyValue="Form" ValidationRules="@(new ValidationRules{ Required=true})" ForeignDataSource="@_dtForm" Width="150" />
+							<GridColumn TextAlign="Syncfusion.Blazor.Grids.TextAlign.Center" HeaderText="Lihat Data">
+								<Template>
+									@{
+										var akses = context as T9Privileges;
+										<SfCheckBox @bind-Checked="akses.IsAbleToReadData"></SfCheckBox>
+									}
+								</Template>
+							</GridColumn>
+							<GridColumn TextAlign="Syncfusion.Blazor.Grids.TextAlign.Center" HeaderText="Tambah Data">
+								<Template>
+									@{
+										var akses = context as T9Privileges;
+										var form = _dtForm.FirstOrDefault(x => x.IdForm == akses.IdForm);
+										<SfCheckBox Disabled="@(!form.IsAbleToAddData)" @bind-Checked="akses.IsAbleToAddData"></SfCheckBox>
+									}
+								</Template>
+							</GridColumn>
+							<GridColumn TextAlign="Syncfusion.Blazor.Grids.TextAlign.Center" HeaderText="Edit Data">
+								<Template>
+									@{
+										var akses = context as T9Privileges;
+										var form = _dtForm.FirstOrDefault(x => x.IdForm == akses.IdForm);
+										<SfCheckBox Disabled="@(!form.IsAbleToEditData)" @bind-Checked="akses.IsAbleToEditData"></SfCheckBox>
+									}
+								</Template>
+							</GridColumn>
+							<GridColumn TextAlign="Syncfusion.Blazor.Grids.TextAlign.Center" HeaderText="Hapus Data">
+								<Template>
+									@{
+										var akses = context as T9Privileges;
+										var form = _dtForm.FirstOrDefault(x => x.IdForm == akses.IdForm);
+										<SfCheckBox Disabled="@(!form.IsAbleToDeleteData)" @bind-Checked="akses.IsAbleToDeleteData"></SfCheckBox>
+									}
+								</Template>
+							</GridColumn>
+						</GridColumn>
+					</bwaPolaris.Control.CustomGrid>
+				</ContentTemplate>
+			</TabItem>
+		</TabItems>
+	</SfTab>;
+}
+
+@code {
+	[Parameter]
+	public string IdFormAktif { get; set; }
+
+	private List<T5Jabatan_Staf> _dtDetilJabatan = new();
+	private List<T9Privileges> _dtPrivilege = new();
+	private List<T0Jabatan> _dtjabatan = new();
+	private List<T0Form> _dtForm = new();
+
+	private List<T1AtributForm> _dtGrdDetilJabatan_AtributForm = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		IdData = "Staf";
+		IdForm = IdFormAktif;
+		dsRekapitulasi = new List<uimT1Staf>();
+		dsRekapitulasi = await svcStaf.GetStaf();
+		_dtjabatan = await svcJabatan.GetJabatan();
+		_dtForm = (await svcForm.GetDataForm()).Where(x => x.HasChild == false).ToList();
+
+		//Load Atribut Form pada GrdDetil
+		_dtGrdDetilJabatan_AtributForm = (await svcForm.GetDataAtributForm("100106-01"));
+
+		DataDipilih = new();
+		_dtDetilJabatan = new();
+		_dtPrivilege = new();
+		JudulDetil = "";
+		this.StateHasChanged();
+	}
+
+	public override async void OnDataDipilih(Syncfusion.Blazor.Grids.RecordClickEventArgs<uimT1Staf> args)
+	{
+		JudulDetil = $"MENGEDIT '{args.RowData.Nama}'";
+		TampilkanFormJabatan = false;
+		_dtDetilJabatan = await svcStaf.GetStaf_DetilJabatan(args.RowData.IdStaf);
+		_dtPrivilege = await svcPrivileges.GetPrivileges(Guid.Parse(args.RowData.Kode)); //Diubah menjadi Kode1
+		base.OnDataDipilih(args);
+	}
+
+	public override void OnDataBaru()
+	{
+		base.OnDataBaru();
+		DataDipilih = new();
+		if(_dtDetilJabatan.Count > 0) _dtDetilJabatan.Clear();
+		StateHasChanged();
+	}
+
+	public override async void OnSimpanData()
+	{
+		base.OnSimpanData();
+		DataDipilih.ListT5Jabatan_Staf = _dtDetilJabatan;
+		DataDipilih.ListT9Privileges = _dtPrivilege;
+
+		var reply = false;
+		if (JudulDetil.Contains("DATA BARU"))
+		{
+			reply = await svcStaf.InsertStaf(DataDipilih);
+		}
+		else
+		{
+			reply = await svcStaf.UpdateStaf(DataDipilih);
+		}
+		if (reply)
+		{
+			await OnInitializedAsync();
+		}
+	}
+
+	public override async void OnHapusData()
+	{
+		base.OnHapusData();
+		var reply = await svcStaf.DeleteStaf(DataDipilih);
+		if (reply)
+		{
+			await OnInitializedAsync();
+		}
+	}
+
+	public override void OnBatal_SimpanData()
+	{
+		base.OnBatal_SimpanData();
+		DataDipilih = new();
+	}
+
+	#region 'Detil Jabatan'
+	public bool TampilkanFormJabatan = false;
+	public T5Jabatan_Staf drJabatan = new();
+	public string TextButtonDetilJabatan = "Buka Form";
+
+	public virtual async void GrdDetilJabatan_DataDipilih(object data)
+	{
+		if (data is null) return;
+		drJabatan = data as T5Jabatan_Staf;
+		TampilkanFormJabatan = true;
+		StateHasChanged();
+	}
+
+	public async Task OnTampilkanFormJabatan()
+	{
+		TampilkanFormJabatan = !TampilkanFormJabatan;
+		if (TampilkanFormJabatan) TextButtonDetilJabatan = "Tutup Form";
+		else TextButtonDetilJabatan = "Buka Form";
+		drJabatan = new();
+		this.StateHasChanged();
+	}
+
+	public async Task GrdDetilJabatan_Batal()
+	{
+		TampilkanFormJabatan = false;
+		TextButtonDetilJabatan = "Buka Form";
+		drJabatan = new();
+		this.StateHasChanged();
+	}
+
+	public async Task GrdDetilJabatan_Simpan()
+	{
+		if (drJabatan.IdStaf is null) { drJabatan.IdStaf = DataDipilih.IdStaf; _dtDetilJabatan.Add(drJabatan); }
+		else
+		{
+			var dataLama = _dtDetilJabatan.FirstOrDefault(x => x.IdJabatanStaf == drJabatan.IdJabatanStaf);
+			_dtDetilJabatan.Remove(dataLama);
+			_dtDetilJabatan.Add(drJabatan);
+		}
+		drJabatan = new();
+		this.StateHasChanged();
+	}
+
+	public async void CmbJabatan_Dipilih(Guid? idJabatan)
+	{
+		if (idJabatan == null) return;
+		var value = _dtjabatan.FirstOrDefault(x => x.IdJabatan == idJabatan);
+		drJabatan.IdJabatan = value.IdJabatan;
+		drJabatan.Jabatan = value.Jabatan;
+		await InvokeAsync(StateHasChanged);
+	}
+	#endregion
+}

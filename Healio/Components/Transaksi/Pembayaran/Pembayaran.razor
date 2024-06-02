@@ -1,0 +1,272 @@
+﻿@page "/pembayaran/{IdFormAktif}"
+@using DevExpress.Blazor
+@using Healio.Shared
+@using System.Reflection
+@using Radzen
+@using Radzen.Blazor
+@using Syncfusion.Blazor.Data;
+@using Syncfusion.Blazor.Lists
+@using System.Globalization
+@using bwaPolaris.Shared
+@using Toolbelt.Blazor.SpeechSynthesis
+@inject SpeechSynthesis Speech
+@inject svcPembayaran svcPembayaran
+@inject svcResepObat svcResepObat
+@inherits Container_1<uimT6Pemeriksaan, svcPembayaran>
+
+@{
+	base.BuildRenderTree(__builder);
+	rfColumn =
+	@<div>
+		<GridColumn Field="@nameof(uimT6Pemeriksaan.Opsi)" HeaderText="Opsi" Context="dtContext">
+			<Template>
+				@{
+					var data = dtContext as uimT6Pemeriksaan;
+					<MudIconButton OnClick="(() => OnPanggilPasien(data.Pasien_Nama, data.NoTransaksi))" Icon="@Icons.Material.Filled.Mic" Variant="MudBlazor.Variant.Filled" Color="Color.Info" Size="Size.Small" />
+				}
+			</Template>
+		</GridColumn>
+	</div>;
+	;
+	rfDetil =
+	@<div>
+		<div class="row">
+			<div class="col-md-6">
+				<SfTextBox Placeholder="Nama Pasien" @bind-Value="@DataDipilih.Pasien_Nama" Enabled="false" FloatLabelType='@FloatLabelType.Auto' />
+			</div>
+			<div class="col-md-6">
+				<SfTextBox Placeholder="Nama Dokter" @bind-Value="@DataDipilih.Dokter_Nama" Enabled="false" FloatLabelType='@FloatLabelType.Auto' />
+			</div>
+			<div style="margin-top: 5vh">
+				<SfListView DataSource="@DtDetilPembayaran"
+							ShowHeader="true"
+							HeaderTitle="Detil Pemeriksaan"
+							CssClass="e-list-template">
+					<ListViewFieldSettings TValue="uimT7Pembayaran" Id="@nameof(uimT7Pembayaran.Id)" Text="@nameof(uimT7Pembayaran.Nama)" GroupBy="@nameof(uimT7Pembayaran.Kategori)"></ListViewFieldSettings>
+					<ListViewTemplates TValue="uimT7Pembayaran">
+						<Template>
+							@{
+								uimT7Pembayaran item = context as uimT7Pembayaran;
+								<div class="e-list-wrapper e-list-multi-line e-list-avatar">
+									<div class="row">
+										<div class="col-1">
+											@if(item.Id > 0){
+												<span class="e-list-item-header">@item.Id</span>
+											}
+										</div>
+										<div class="col-3">
+											<span class="e-list-item-header">@item.Nama</span>
+											<span class="e-list-content">@item.Kode</span>
+										</div>
+										<div class="col-2">
+											@if(item.Jumlah > 0){
+												<span class="e-list-item-header">@item.Jumlah x @String.Format(CultureInfo.CreateSpecificCulture("id-id"), "Rp {0:N}", item.Harga)</span>
+											}
+										</div>
+										<div class="col-2">
+											<span class="e-list-item-header">@String.Format(CultureInfo.CreateSpecificCulture("id-id"), "Rp {0:N}", item.Total)</span>
+										</div>
+									</div>
+								</div>
+							}
+						</Template>
+					</ListViewTemplates>
+				</SfListView>
+			</div>
+
+			<div style="margin-top: 5vh">
+				<h5>Proses Pembayaran</h5>
+				<div class="row">
+					<div class="col-md-6">
+						<SfNumericTextBox Placeholder="GrandTotal" Value="@GrandTotal" Enabled="false" FloatLabelType='@FloatLabelType.Auto' />
+					</div>
+					<div class="col-md-6">
+						<SfNumericTextBox Placeholder="Total Bayar" @bind-Value="@TotalBayar" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+					</div>
+					<div class="col-md-6">
+						<SfNumericTextBox Placeholder="Kembalian" Value="@(TotalBayar - GrandTotal)" Enabled="false" FloatLabelType='@FloatLabelType.Auto' />
+					</div>
+					<div class="col-md-6">
+						<SfComboBox Placeholder="Status Pembayaran" DataSource="@DtStatusPembayaran" TItem="T9DataOption" TValue="string" @bind-Value="@DataDipilih.StatusPembayaran" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto'>
+							<ComboBoxFieldSettings Value="DataOption" Text="DataOption"></ComboBoxFieldSettings>
+						</SfComboBox>
+					</div>
+					<div class="col-md-6" style="margin-top: 1vh !important;">
+						<MudButton Variant="MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Info" OnClick="OnSimpanData">Proses Pembayaran</MudButton>
+					</div>
+				</div>
+			</div>
+
+			
+		</div>
+	</div>;
+}
+
+<style>
+	.flex {
+		display: flex;
+	}
+
+	.flex__center {
+		justify-content: center;
+	}
+
+	.vertical__center {
+		align-items: center;
+	}
+
+	.vertical {
+		flex-direction: column;
+	}
+
+	.flex__1 {
+		flex: 1;
+	}
+
+	.flex__2 {
+		flex: 2;
+	}
+
+	.flex__3 {
+		flex: 3;
+	}
+
+	.flex__4 {
+		flex: 4;
+	}
+
+	.bold {
+		font-weight: 500;
+	}
+
+	.margin {
+		margin: 10px;
+		width: 350px;
+	}
+
+	.small__font {
+		font-size: 13px;
+		margin: 2px 0;
+	}
+</style>
+@code {
+	[Parameter]
+	public string IdFormAktif { get; set; }
+
+
+	public List<uimT7Pembayaran> DtDetilPembayaran = new();
+	public List<T9DataOption> DtStatusPembayaran = new();
+
+	public decimal? GrandTotal = 0;
+	public decimal? TotalBayar = 0;
+
+	protected override async Task OnInitializedAsync()
+	{
+		IdData = "Pembayaran";
+		IdForm = IdFormAktif;
+		dsRekapitulasi = new List<uimT6Pemeriksaan>();
+		dsRekapitulasi = await svcPembayaran.GetPemeriksaan();
+		DtStatusPembayaran = await svcDataOption.GetDataOption("Status Pembayaran");
+
+		DataDipilih = new();
+		DtDetilPembayaran = new();
+		JudulDetil = "";
+		this.StateHasChanged();
+	}
+
+	public override async void OnDataDipilih(Syncfusion.Blazor.Grids.RecordClickEventArgs<uimT6Pemeriksaan> args)
+	{
+		JudulDetil = $"MENGEDIT '{args.RowData.NoTransaksi}'";
+		var dtTindakan = await svcPembayaran.GetDetilPemeriksaan_Tindakan(args.RowData.IdPemeriksaan);
+		var dtResepObat = await svcResepObat.GetResepObatByIdPemeriksaan(args.RowData.IdPemeriksaan);
+		var dtDetilResepObat = new List<uimT7ResepObat>();
+		if(dtResepObat.Count > 0) dtDetilResepObat = await svcResepObat.GetDetilResepObat(dtResepObat.FirstOrDefault().IdResepObat);
+		//DtDetilResepObat = await svcPemeriksaan.GetDetilResepObat(args.RowData.IdResepObat);
+		if (DtDetilPembayaran.Count > 0) DtDetilPembayaran.Clear();
+		var nomor = 0;
+		foreach(var item in dtTindakan)
+		{
+			nomor += 1;
+			DtDetilPembayaran.Add(new uimT7Pembayaran { 
+				Id = nomor, 
+				Nama = item.Tindakan_Nama, 
+				Kode = item.Tindakan_Kode, 
+				Jumlah = 1, 
+				Harga = item.Tindakan_Harga, 
+				Total = item.Tindakan_Harga,
+				Kategori = "Tindakan"
+			});
+		}
+
+		nomor = 0;
+		foreach(var item in dtDetilResepObat)
+		{
+			nomor += 1;
+			DtDetilPembayaran.Add(new uimT7Pembayaran
+				{
+					Id = nomor,
+					Nama = item.Obat_Nama,
+					Kode = item.Obat_Kode,
+					Jumlah = item.Jumlah,
+					Harga = item.Obat_Harga,
+					Total = item.Total,
+					Kategori = "Obat"
+				});
+		}
+
+		DtDetilPembayaran.Add(new uimT7Pembayaran
+			{
+				Id = 0,
+				Nama = "",
+				Kode = "",
+				Jumlah = 0,
+				Harga = 0,
+				Total = DtDetilPembayaran.Sum(x => x.Total),
+				Kategori = "Obat"
+			});
+
+		GrandTotal = DtDetilPembayaran.Last().Total;
+		base.OnDataDipilih(args);
+		TampilkanButtonSimpan = false;
+		StateHasChanged();
+
+	}
+
+	public override async void OnSimpanData()
+	{
+		base.OnSimpanData();
+		var reply = false;
+		
+		reply = await svcPembayaran.UpdatePemeriksaan(DataDipilih);
+		if (reply)
+		{
+			await OnInitializedAsync();
+		}
+	}
+
+	public override async void OnHapusData()
+	{
+
+		base.OnHapusData();		
+		await OnInitializedAsync();
+	}
+
+	public override async void OnBatal_SimpanData()
+	{
+		base.OnBatal_SimpanData();
+		await OnInitializedAsync();
+	}
+
+	public async Task OnPanggilPasien(string? nama, string noTransaksi)
+	{
+		var utterancet = new SpeechSynthesisUtterance
+			{
+				Text = $"Kepada saudara {nama}, silahkan menghampiri loket pembayaran. Terimakasih.",
+				Lang = "id-ID", // BCP 47 language tag
+				Pitch = 1.0, // 0.0 ~ 2.0 (Default 1.0)
+				Rate = 1.0, // 0.1 ~ 10.0 (Default 1.0)
+				Volume = 1.0, // 0.0 ~ 1.0 (Default 1.0)
+			};
+		await Speech.SpeakAsync(utterancet);
+	}
+}

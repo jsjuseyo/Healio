@@ -1,0 +1,128 @@
+﻿@page "/pasien/{IdFormAktif}"
+@using Healio.Shared
+@using Syncfusion.Blazor.Data;
+@using bwaPolaris.Shared
+@inject svcPasien svcPasien
+@inherits Container_1<T0Pasien, svcPasien>
+
+@{
+	base.BuildRenderTree(__builder);
+	rfGrid_Detil = @<GridTemplates>
+		<DetailTemplate>
+			@{
+		var item = (context as T0Pasien);
+				<SfGrid RowRenderingMode="@RowDirection.Vertical" EnableAdaptiveUI="true" DataSource="@dsRekapitulasi" Query="@(new Query().Where("IdPasien", "equal", item.IdPasien))">
+					<GridColumns>
+						@foreach (var item in AtributForm.Where(x => x.TampilMobile == false))
+				{
+						<GridColumn TextAlign="TextAlign.Center" Field="@item.Field" HeaderText="@item.CaptionRekapitulasi"></GridColumn>
+				}
+					</GridColumns>
+				</SfGrid>
+			}
+		</DetailTemplate>
+	</GridTemplates>
+	;
+	rfDetil =
+	@<div class="row">
+		<div class="col-md-6">
+			<SfTextBox Placeholder="Nama" @bind-Value="@DataDipilih.Nama" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+			<ValidationMessage For="@(() => DataDipilih.Nama)"></ValidationMessage>
+		</div>
+		<div class="col-md-6">
+			<SfTextBox Placeholder="NIK" @bind-Value="@DataDipilih.NIK" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+			<ValidationMessage For="@(() => DataDipilih.NIK)"></ValidationMessage>
+		</div>
+		<div class="col-md-6">
+			<SfComboBox Placeholder="Jenis Kelamin" DataSource="@DtJenisKelamin" TItem="T9DataOption" TValue="string" @bind-Value="@DataDipilih.JenisKelamin" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto'>
+				<ComboBoxFieldSettings Value="DataOption" Text="DataOption"></ComboBoxFieldSettings>
+			</SfComboBox>
+			<ValidationMessage For="@(() => DataDipilih.NIK)"></ValidationMessage>
+		</div>
+		<div class="col-md-6">
+			<SfTextBox Placeholder="Nomor Telepon" @bind-Value="@DataDipilih.NoTelepon" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+			<ValidationMessage For="@(() => DataDipilih.NoTelepon)"></ValidationMessage>
+		</div>
+		<div class="col-md-6">
+			<SfTextBox Placeholder="Pekerjaan" @bind-Value="@DataDipilih.Pekerjaan" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+			<ValidationMessage For="@(() => DataDipilih.Pekerjaan)"></ValidationMessage>
+		</div>
+		<div class="col-md-6">
+			<SfTextBox Multiline="true" Placeholder="Alamat" @bind-Value="@DataDipilih.Alamat" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+			<ValidationMessage For="@(() => DataDipilih.Alamat)"></ValidationMessage>
+		</div>
+		<div class="col-md-6">
+			<SfTextBox Multiline="true" Placeholder="Alergi Obat" @bind-Value="@DataDipilih.AlergiObat" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+			<ValidationMessage For="@(() => DataDipilih.AlergiObat)"></ValidationMessage>
+		</div>
+		<div class="col-md-6">
+			<SfTextBox Multiline="true" Placeholder="Keterangan" @bind-Value="@DataDipilih.Keterangan" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+			<ValidationMessage For="@(() => DataDipilih.Keterangan)"></ValidationMessage>
+		</div>
+	</div>;
+}
+
+@code {
+	[Parameter]
+	public string IdFormAktif { get; set; }
+
+	public List<T9DataOption> DtJenisKelamin = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		IdData = "Pasien";
+		IdForm = IdFormAktif;
+		dsRekapitulasi = new List<T0Pasien>();
+		dsRekapitulasi = await svcPasien.GetPasien();
+		DtJenisKelamin = await svcDataOption.GetDataOption("Jenis Kelamin");
+		DataDipilih = new();
+		JudulDetil = "";
+		this.StateHasChanged();
+	}
+
+	public override void OnDataDipilih(Syncfusion.Blazor.Grids.RecordClickEventArgs<T0Pasien> args)
+	{
+		JudulDetil = $"MENGEDIT '{args.RowData.Nama}'";
+		base.OnDataDipilih(args);
+	}
+
+	public override void OnDataBaru()
+	{
+		base.OnDataBaru();
+		DataDipilih = new();
+	}
+
+	public override async void OnSimpanData()
+	{
+		base.OnSimpanData();
+		var reply = false;
+		if (JudulDetil.Contains("DATA BARU"))
+		{
+			reply = await svcPasien.InsertPasien(DataDipilih);
+		}
+		else
+		{
+			reply = await svcPasien.UpdatePasien(DataDipilih);
+		}
+		if (reply)
+		{
+			await OnInitializedAsync();
+		}
+	}
+
+	public override async void OnHapusData()
+	{
+		base.OnHapusData();
+		var reply = await svcPasien.DeletePasien(DataDipilih);
+		if (reply)
+		{
+			await OnInitializedAsync();
+		}
+	}
+
+	public override void OnBatal_SimpanData()
+	{
+		base.OnBatal_SimpanData();
+		DataDipilih = new();
+	}
+}

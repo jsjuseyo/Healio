@@ -1,0 +1,199 @@
+﻿@page "/Pendaftaran/{IdFormAktif}"
+@using DevExpress.Blazor
+@using Healio.Shared
+@using Radzen
+@using Radzen.Blazor
+@using Syncfusion.Blazor.Data;
+@using System.Reflection
+@using bwaPolaris.Shared
+@inject svcPendaftaran svcPendaftaran
+@inject svcPasien svcPasien
+@inject svcStaf svcStaf
+@inherits Container_1<uimPendaftaran, svcPendaftaran>
+
+@{
+	base.BuildRenderTree(__builder);
+	rfGrid_Detil = @<GridTemplates>
+		<DetailTemplate>
+			@{
+				var item = (context as uimPendaftaran);
+				<SfGrid RowRenderingMode="@RowDirection.Vertical" EnableAdaptiveUI="true" DataSource="@dsRekapitulasi" Query="@(new Syncfusion.Blazor.Data.Query().Where("IdPemeriksaan", "equal", item.IdPemeriksaan))">
+					<GridColumns>
+						@foreach (var item in AtributForm.Where(x => x.TampilMobile == false))
+						{
+							<GridColumn TextAlign="Syncfusion.Blazor.Grids.TextAlign.Center" Field="@item.Field" HeaderText="@item.CaptionRekapitulasi"></GridColumn>
+						}
+					</GridColumns>
+				</SfGrid>
+			}
+		</DetailTemplate>
+	</GridTemplates>
+	;
+	rfDetil =
+	@<div class="row">
+		<div class="col-md-6">
+			<div class="form-group">
+				<label class="form-group" style="margin-bottom: 1vh !important;">Pasien</label><br />
+				<RadzenDropDownDataGrid Value=@DataDipilih.IdPasien Data=@DtPasien Disabled=@(!EnableControl)
+										TextProperty="Nama"
+										ValueProperty="IdPasien"
+										AllowColumnResize="true"
+										AllowFilteringByAllStringColumns="true"
+										FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+										FilterOperator="StringFilterOperator.Contains"
+										AllowFiltering="true"
+										AllowVirtualization="true"
+										ValueChanged="@((Guid idPasien) => CmbPasien_Dipilih(idPasien))">
+					<Columns>
+						<RadzenDropDownDataGridColumn Property="Nama" Title="Nama" />
+						<RadzenDropDownDataGridColumn Property="NIK" Title="NIK" />
+					</Columns>
+				</RadzenDropDownDataGrid>
+			</div>
+			<ValidationMessage For="@(() => DataDipilih.IdPasien)"></ValidationMessage>
+		</div>
+		<div class="col-md-6">
+			<div class="form-group">
+				<label class="form-group" style="margin-bottom: 1vh !important;">Dokter</label><br />
+				<RadzenDropDownDataGrid Value=@DataDipilih.IdDokter Data=@DtDokter Disabled=@(!EnableControl)
+										TextProperty="Nama"
+										ValueProperty="IdStaf"
+										AllowColumnResize="true"
+										AllowFilteringByAllStringColumns="true"
+										FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+										FilterOperator="StringFilterOperator.Contains"
+										AllowFiltering="true"
+										AllowVirtualization="true"
+										ValueChanged="@((Guid idStaf) => CmbDokter_Dipilih(idStaf))">
+					<Columns>
+						<RadzenDropDownDataGridColumn Property="Nama" Title="Nama" />
+						<RadzenDropDownDataGridColumn Property="Alamat" Title="Alamat" />
+					</Columns>
+				</RadzenDropDownDataGrid>
+			</div>
+			<ValidationMessage For="@(() => DataDipilih.IdDokter)"></ValidationMessage>
+		</div>
+		<div class="col-md-6">
+			<div class="form-group">
+				<label class="form-group" style="margin-bottom: 1vh !important;">Tujuan Pemeriksaan</label><br />
+				<SfTextBox Multiline="true" @bind-Value="@DataDipilih.TujuanPemeriksaan" Enabled="@EnableControl"/>
+			</div>
+			<ValidationMessage For="@(() => DataDipilih.TujuanPemeriksaan)"></ValidationMessage>
+		</div>
+		<div class="col-md-6">
+			<div class="form-group">
+				<label class="form-group" style="margin-bottom: 1vh !important;">Gejala</label><br />
+				<SfTextBox Multiline="true" @bind-Value="@DataDipilih.Gejala" Enabled="@EnableControl" />
+			</div>
+			<ValidationMessage For="@(() => DataDipilih.Gejala)"></ValidationMessage>
+		</div>		
+	</div>;
+}
+
+@code {
+	[Parameter]
+	public string IdFormAktif { get; set; }
+
+	public List<T0Pasien> DtPasien = new();
+	public List<uimT1Staf> DtDokter = new();
+
+	PropertyInfo[]? pendaftaranProperties;
+
+	protected override async Task OnInitializedAsync()
+	{
+		IdData = "Pendaftaran";
+		IdForm = IdFormAktif;
+		dsRekapitulasi = new List<uimPendaftaran>();
+		dsRekapitulasi = await svcPendaftaran.GetPendaftaran();
+		DtPasien = await svcPasien.GetPasien();
+		DtDokter = await svcStaf.GetStafByJabatan("Dokter");
+		DataDipilih = new();
+		JudulDetil = "";
+
+		pendaftaranProperties = DataDipilih.GetType().GetProperties();
+		this.StateHasChanged();
+	}
+
+	public override void OnDataDipilih(Syncfusion.Blazor.Grids.RecordClickEventArgs<uimPendaftaran> args)
+	{
+		JudulDetil = $"MENGEDIT '{args.RowData.NoTransaksi}'";
+		base.OnDataDipilih(args);
+		pendaftaranProperties = DataDipilih.GetType().GetProperties();
+	}
+
+	public override void OnDataBaru()
+	{
+		base.OnDataBaru();
+		DataDipilih = new();
+	}
+
+	public override async void OnSimpanData()
+	{
+		base.OnSimpanData();
+		var reply = false;
+		if (JudulDetil.Contains("DATA BARU"))
+		{
+			reply = await svcPendaftaran.InsertPendaftaran(DataDipilih);
+		}
+		else
+		{
+			reply = await svcPendaftaran.UpdatePendaftaran(DataDipilih);
+		}
+		if (reply)
+		{
+			await OnInitializedAsync();
+		}
+	}
+
+	public override async void OnHapusData()
+	{
+		base.OnHapusData();
+		// var reply = await svcPendaftaran.DeletePendaftaran(DataDipilih);
+		// if (reply)
+		// {
+		// 	await OnInitializedAsync();
+		// }
+	}
+
+	public override void OnBatal_SimpanData()
+	{
+		base.OnBatal_SimpanData();
+		DataDipilih = new();
+	}
+
+	public void CmbPasien_Dipilih(Guid? idPasien)
+	{
+		if (idPasien is null) return;
+		var value = DtPasien.FirstOrDefault(x => x.IdPasien == idPasien);
+		DataDipilih.IdPasien = value.IdPasien;
+		PropertyInfo[] valueProperties = value.GetType().GetProperties();
+		foreach (var property in valueProperties)
+		{
+			var propertyValue = property.GetValue(value);
+			var propertyToUpdate = pendaftaranProperties.FirstOrDefault(x => x.Name == $"Pasien_{property.Name}");
+			if (propertyToUpdate is not null)
+			{
+				pendaftaranProperties.FirstOrDefault(x => x.Name == $"Pasien_{property.Name}").SetValue(DataDipilih, propertyValue);
+			}
+		}
+		StateHasChanged();
+	}
+
+	public void CmbDokter_Dipilih(Guid idStaf)
+	{
+		var value = DtDokter.FirstOrDefault(x => x.IdStaf == idStaf);
+		PropertyInfo[] valueProperties = value.GetType().GetProperties();
+		DataDipilih.IdDokter = value.IdStaf;
+		foreach (var property in valueProperties)
+		{
+			var propertyValue = property.GetValue(value);
+			var propertyToUpdate = pendaftaranProperties.FirstOrDefault(x => x.Name == $"Dokter_{property.Name}");
+			if (propertyToUpdate is not null)
+			{
+				pendaftaranProperties.FirstOrDefault(x => x.Name == $"Dokter_{property.Name}").SetValue(DataDipilih, propertyValue);
+			}
+
+		}
+		StateHasChanged();
+	}
+}

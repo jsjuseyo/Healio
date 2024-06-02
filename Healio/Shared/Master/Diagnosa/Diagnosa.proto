@@ -1,0 +1,82 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "bwaHealio.Shared";
+
+import "google/protobuf/wrappers.proto";
+
+// Definisikan Diagnosa service.
+service svpMasterDiagnosa {
+	rpc GetDiagnosaById (RqsDiagnosaById) returns (RplDiagnosaById);
+	rpc GetDiagnosa (RqsDiagnosa) returns (RplDiagnosa);
+	
+    rpc InsertDiagnosa (RqsInsertDiagnosa) returns (RplWriteDiagnosa);
+    rpc UpdateDiagnosa (RqsUpdateDiagnosa) returns (RplWriteDiagnosa);
+	rpc DeleteDiagnosa (RqsDeleteDiagnosa) returns (RplWriteDiagnosa);
+}
+
+message RqsDiagnosaById {
+	string IdDiagnosa = 1;
+}
+message RplDiagnosaById {
+    string IdDiagnosa = 1;
+    string Nama = 2;
+    optional string Kode = 3;
+    optional string Keterangan = 4;
+
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RqsDiagnosa {
+}
+message RplDiagnosa {
+    repeated RplDiagnosaById ListT0Diagnosa = 1;
+}
+
+message RqsInsertDiagnosa {
+    string IdDiagnosa = 1;
+    string Nama = 2;
+    optional string Kode = 3;
+    optional string Keterangan = 4;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RqsUpdateDiagnosa {
+    string IdDiagnosa = 1;
+    string Nama = 2;
+    optional string Kode = 3;
+    optional string Keterangan = 4;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+
+}
+
+message RqsDeleteDiagnosa {
+    string IdDiagnosa = 1;
+    string Nama = 2;
+    optional string Kode = 3;
+    optional string Keterangan = 4;
+    
+    string WaktuInsert = 101;
+	string WaktuProses = 102;
+	string Creator = 103;
+	string Operator = 104;
+	string Synchronise = 105;
+}
+
+message RplWriteDiagnosa {
+    bool IsOK = 1;
+	string Result = 2;
+}

@@ -1,0 +1,602 @@
+﻿@page "/Pemeriksaan/{IdFormAktif}"
+@using DevExpress.Blazor
+@using Healio.Shared
+@using System.Reflection
+@using Radzen
+@using Radzen.Blazor
+@using Syncfusion.Blazor.Data;
+@using bwaPolaris.Shared
+@using Toolbelt.Blazor.SpeechSynthesis
+@inject SpeechSynthesis Speech
+@inject svcPemeriksaan svcPemeriksaan
+@inject svcResepObat svcResepObat
+@inject svcPasien svcPasien
+@inject svcStaf svcStaf
+@inject svcDiagnosa svcDiagnosa
+@inject svcTindakan svcTindakan
+@inject svcObat svcObat
+@inherits Container_1<uimT6Pemeriksaan, svcPemeriksaan>
+
+@{
+	base.BuildRenderTree(__builder);
+	rfColumn =
+	@<div>
+		<GridColumn Field="@nameof(uimT6Pemeriksaan.Opsi)" HeaderText="Opsi" Context="dtContext">
+			<Template>
+				@{
+					var data = dtContext as uimT6Pemeriksaan;
+					<MudIconButton OnClick="(() => OnPanggilPasien(data.Pasien_Nama, data.NoTransaksi))" Icon="@Icons.Material.Filled.Mic" Variant="MudBlazor.Variant.Filled" Color="Color.Info" Size="Size.Small" />
+				}
+			</Template>
+		</GridColumn>
+	</div>;
+	rfGrid_Detil = 
+	@<GridTemplates>
+		<DetailTemplate>
+			@{
+				var item = (context as uimT6Pemeriksaan);
+				<SfGrid RowRenderingMode="@RowDirection.Vertical" EnableAdaptiveUI="true" DataSource="@dsRekapitulasi" Query="@(new Syncfusion.Blazor.Data.Query().Where("IdPemeriksaan", "equal", item.IdPemeriksaan))">
+					<GridColumns>
+						@foreach (var item in AtributForm.Where(x => x.TampilMobile == false))
+						{
+							<GridColumn TextAlign="Syncfusion.Blazor.Grids.TextAlign.Center" Field="@item.Field" HeaderText="@item.CaptionRekapitulasi"></GridColumn>
+						}
+					</GridColumns>
+				</SfGrid>
+			}
+		</DetailTemplate>
+	</GridTemplates>
+	;
+	rfDetil =
+	@<SfTab OverflowMode="OverflowMode.Scrollable">
+		<TabItems>
+			<TabItem>
+				<ChildContent>
+					<TabHeader Text="Assesment"></TabHeader>
+				</ChildContent>
+				<ContentTemplate>
+					<div class="row">
+						<div class="col-md-6">
+							<SfComboBox Placeholder="Pasien" DataSource="@DtPasien" TItem="T0Pasien" TValue="Guid?" @bind-Value="@DataDipilih.IdPasien" Enabled="false" FloatLabelType='@FloatLabelType.Auto' AllowFiltering="true">
+								<ComboBoxFieldSettings Value="IdPasien" Text="Nama"></ComboBoxFieldSettings>
+							</SfComboBox>
+							<ValidationMessage For="@(() => DataDipilih.IdPasien)"></ValidationMessage>
+						</div>
+						<div class="col-md-6">
+							<SfComboBox Placeholder="Dokter" DataSource="@DtDokter" TItem="uimT1Staf" TValue="Guid?" @bind-Value="@DataDipilih.IdDokter" Enabled="false" FloatLabelType='@FloatLabelType.Auto' AllowFiltering="true">
+								<ComboBoxFieldSettings Value="IdStaf" Text="Nama"></ComboBoxFieldSettings>
+							</SfComboBox>
+							<ValidationMessage For="@(() => DataDipilih.IdDokter)"></ValidationMessage>
+						</div>
+						<div class="col-md-6">
+							<SfTextBox Multiline="true" Placeholder="Tujuan Pemeriksaan" @bind-Value="@DataDipilih.TujuanPemeriksaan" Enabled="false" FloatLabelType='@FloatLabelType.Auto' />
+							<ValidationMessage For="@(() => DataDipilih.TujuanPemeriksaan)"></ValidationMessage>
+						</div>
+						<div class="col-md-6">
+							<SfTextBox Multiline="true" Placeholder="Gejala" @bind-Value="@DataDipilih.Gejala" Enabled="false" FloatLabelType='@FloatLabelType.Auto' />
+							<ValidationMessage For="@(() => DataDipilih.Gejala)"></ValidationMessage>
+						</div>
+						<div class="col-md-6">
+							<SfNumericTextBox Placeholder="Tinggi Badan" @bind-Value="@DataDipilih.TinggiBadan" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+							<ValidationMessage For="@(() => DataDipilih.TinggiBadan)"></ValidationMessage>
+						</div>
+						<div class="col-md-6">
+							<SfNumericTextBox Placeholder="Berat Badan" @bind-Value="@DataDipilih.BeratBadan" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+							<ValidationMessage For="@(() => DataDipilih.BeratBadan)"></ValidationMessage>
+						</div>
+						<div class="col-md-6">
+							<SfTextBox Placeholder="Tekanan Darah" @bind-Value="@DataDipilih.TekananDarah" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+							<ValidationMessage For="@(() => DataDipilih.TekananDarah)"></ValidationMessage>
+						</div>
+					</div>
+				</ContentTemplate>
+			</TabItem>
+			<TabItem>
+				<ChildContent>
+					<TabHeader Text="Diagnosa"></TabHeader>
+				</ChildContent>
+				<ContentTemplate>
+					<div style="min-height:90vh !important;">
+						@if(TampilkanFormDetilPemeriksaan_Diagnosa){
+							<div style="margin-top: 1vh !important; margin-bottom: 3vh !important;">
+								<SfCard>
+									<CardHeader Title="Kelola Diagnosa" />
+									<CardContent>
+										<EditForm Model="@drDetilPemeriksaan_Diagnosa" OnValidSubmit="@GrdDetilPemeriksaan_Diagnosa_Simpan">
+											<div class="form-group">
+												<label class="form-group" style="margin-bottom: 1vh !important;">Diagnosa</label><br />
+												<RadzenDropDownDataGrid Value=@drDetilPemeriksaan_Diagnosa.IdDiagnosa
+																		Data=@DtDiagnosa
+																		TextProperty="Nama"
+																		ValueProperty="IdDiagnosa"
+																		AllowColumnResize="true"
+																		AllowFilteringByAllStringColumns="true"
+																		FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+																		FilterOperator="StringFilterOperator.Contains"
+																		AllowFiltering="true"
+																		AllowVirtualization="true"
+																		ValueChanged="@((Guid idDiagnosa) => CmbDiagnosa_Dipilih(idDiagnosa))">
+													<Columns>
+														<RadzenDropDownDataGridColumn Property="Nama" Title="Nama" />
+														<RadzenDropDownDataGridColumn Property="Kode" Title="Kode" />
+													</Columns>
+												</RadzenDropDownDataGrid>
+											</div>
+											<div class="form-group">
+												<label class="form-group" style="margin-bottom: 1vh !important;">Keterangan</label><br />
+												<SfTextBox Multiline="true" @bind-Value="@drDetilPemeriksaan_Diagnosa.Keterangan" />
+											</div>
+											<div class="form-group" style="margin-top: 2vh !important;">
+												<MudButton ButtonType="MudBlazor.ButtonType.Submit" Variant="MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Info" Size="Size.Small">Simpan</MudButton>
+												<MudButton Variant="MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel" IconColor="Color.Surface" Size="Size.Small" OnClick="GrdDetilPemeriksaan_Diagnosa_Batal"> Batal</MudButton>
+											</div>
+										</EditForm>
+									</CardContent>
+								</SfCard>
+							</div>
+						}
+						<div style="margin-top: 1vh !important; margin-bottom: 1vh !important">
+							<MudButton Variant="MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.OpenInBrowser" Color="Color.Info" OnClick="OnTampilkanFormDetilPemeriksaan_Diagnosa">@TextButtonDetilDetilPemeriksaan_Diagnosa</MudButton>
+						</div>
+						<DxGrid Data="@DtDetilPemeriksaan_Diagnosa" KeyboardNavigationEnabled="true" AllowSelectRowByClick="true" AllowColumnReorder="true" AllowSort="true" ShowFilterRow="true"
+							SelectionMode="GridSelectionMode.Single" SelectedDataItemChanged="@GrdDetilPemeriksaan_Diagnosa_DataDipilih">
+							<Columns>
+								@foreach(var item in _dtGrdDetilPemeriksaan_Diagnosa_AtributForm){
+									<DxGridDataColumn FieldName="@item.Field" Caption="@item.CaptionRekapitulasi" Visible="@item.TampilRekapitulasi" />
+								}
+							</Columns>
+						</DxGrid>
+					</div>
+				</ContentTemplate>
+			</TabItem>
+			<TabItem>
+				<ChildContent>
+					<TabHeader Text="Tindakan"></TabHeader>
+				</ChildContent>
+				<ContentTemplate>
+					<div style="min-height:90vh !important;">
+						@if(TampilkanFormDetilPemeriksaan_Tindakan){
+						<div style="margin-top: 1vh !important; margin-bottom: 3vh !important;">
+							<SfCard>
+								<CardHeader Title="Kelola Tindakan" />
+								<CardContent>
+									<EditForm Model="@drDetilPemeriksaan_Tindakan" OnValidSubmit="@GrdDetilPemeriksaan_Tindakan_Simpan">
+										<div class="form-group">
+											<label class="form-group" style="margin-bottom: 1vh !important;">Tindakan</label><br />
+											<RadzenDropDownDataGrid Value=@drDetilPemeriksaan_Tindakan.IdTindakan
+																	Data=@DtTindakan
+																	TextProperty="Nama"
+																	ValueProperty="IdTindakan"
+																	AllowColumnResize="true"
+																	AllowFilteringByAllStringColumns="true"
+																	FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+																	FilterOperator="StringFilterOperator.Contains"
+																	AllowFiltering="true"
+																	AllowVirtualization="true"
+																	ValueChanged="@((Guid idTindakan) => CmbTindakan_Dipilih(idTindakan))">
+												<Columns>
+													<RadzenDropDownDataGridColumn Property="Nama" Title="Nama" />
+													<RadzenDropDownDataGridColumn Property="Kode" Title="Kode" />
+												</Columns>
+											</RadzenDropDownDataGrid>
+										</div>
+										<div class="form-group" style="margin-top: 2vh !important;">
+											<MudButton ButtonType="MudBlazor.ButtonType.Submit" Variant="MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Info" Size="Size.Small">Simpan</MudButton>
+											<MudButton Variant="MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel" IconColor="Color.Surface" Size="Size.Small" OnClick="GrdDetilPemeriksaan_Tindakan_Batal"> Batal</MudButton>
+										</div>
+									</EditForm>
+								</CardContent>
+							</SfCard>
+						</div>
+					}
+						<div style="margin-top: 1vh !important; margin-bottom: 1vh !important">
+							<MudButton Variant="MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.OpenInBrowser" Color="Color.Info" OnClick="OnTampilkanFormDetilPemeriksaan_Tindakan">@TextButtonDetilDetilPemeriksaan_Tindakan</MudButton>
+						</div>
+						<DxGrid Data="@DtDetilPemeriksaan_Tindakan" KeyboardNavigationEnabled="true" AllowSelectRowByClick="true" AllowColumnReorder="true" AllowSort="true" ShowFilterRow="true"
+								SelectionMode="GridSelectionMode.Single" SelectedDataItemChanged="@GrdDetilPemeriksaan_Tindakan_DataDipilih">
+							<Columns>
+								@foreach(var item in _dtGrdDetilPemeriksaan_Tindakan_AtributForm){
+								<DxGridDataColumn FieldName="@item.Field" Caption="@item.CaptionRekapitulasi" Visible="@item.TampilRekapitulasi" />
+							}
+							</Columns>
+						</DxGrid>
+					</div>
+				</ContentTemplate>
+			</TabItem>
+			<TabItem>
+				<ChildContent>
+					<TabHeader Text="Resep Obat"></TabHeader>
+				</ChildContent>
+				<ContentTemplate>
+					<div style="min-height:90vh !important;">
+						@if(TampilkanFormDetilPemeriksaan_ResepObat){
+						<div style="margin-top: 1vh !important; margin-bottom: 3vh !important;">
+							<SfCard>
+								<CardHeader Title="Kelola Obat" />
+								<CardContent>
+									<EditForm Model="@drDetilResepObat" OnValidSubmit="@GrdDetilPemeriksaan_ResepObat_Simpan">
+										<div class="form-group">
+											<label class="form-group" style="margin-bottom: 1vh !important;">Obat</label><br />
+											<RadzenDropDownDataGrid Value=@drDetilResepObat.IdObat
+																	Data=@DtObat
+																	TextProperty="Nama"
+																	ValueProperty="IdObat"
+																	AllowColumnResize="true"
+																	AllowFilteringByAllStringColumns="true"
+																	FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+																	FilterOperator="StringFilterOperator.Contains"
+																	AllowFiltering="true"
+																	AllowVirtualization="true"
+																	ValueChanged="@((Guid idObat) => CmbObat_Dipilih(idObat))">
+												<Columns>
+													<RadzenDropDownDataGridColumn Property="Nama" Title="Nama" />
+													<RadzenDropDownDataGridColumn Property="Kode" Title="Kode" />
+													<RadzenDropDownDataGridColumn Property="Harga" Title="Harga" />
+												</Columns>
+											</RadzenDropDownDataGrid>
+										</div>
+										<div class="form-group">
+											<label class="form-group" style="margin-bottom: 1vh !important;">Dosis</label><br />
+											<SfTextBox @bind-Value="@drDetilResepObat.Dosis" />
+										</div>
+										<div class="form-group">
+											<label class="form-group" style="margin-bottom: 1vh !important;">Frekuensi</label><br />
+											<RadzenDropDownDataGrid @bind-Value=@drDetilResepObat.Frekuensi
+																	Data=@_dtFrekuensiObat
+																	TextProperty="DataOption"
+																	ValueProperty="DataOption"
+																	AllowColumnResize="true"
+																	AllowFilteringByAllStringColumns="true"
+																	FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+																	FilterOperator="StringFilterOperator.Contains"
+																	AllowFiltering="true"
+																	AllowVirtualization="true">
+												<Columns>
+													<RadzenDropDownDataGridColumn Property="DataOption" Title="Frekuensi" />
+												</Columns>
+											</RadzenDropDownDataGrid>
+										</div>
+										<div class="form-group">
+											<label class="form-group" style="margin-bottom: 1vh !important;">Jumlah</label><br />
+											<SfNumericTextBox @bind-Value="@drDetilResepObat.Jumlah" />
+										</div>
+										<div class="form-group">
+											<label class="form-group" style="margin-bottom: 1vh !important;">Durasi</label><br />
+											<SfTextBox @bind-Value="@drDetilResepObat.Durasi" />
+										</div>
+										<div class="form-group">
+											<label class="form-group" style="margin-bottom: 1vh !important;">Keterangan</label><br />
+											<SfTextBox Multiline="true" @bind-Value="@drDetilResepObat.Keterangan" />
+										</div>
+										<div class="form-group" style="margin-top: 2vh !important;">
+											<MudButton ButtonType="MudBlazor.ButtonType.Submit" Variant="MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Info" Size="Size.Small">Simpan</MudButton>
+											<MudButton Variant="MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel" IconColor="Color.Surface" Size="Size.Small" OnClick="GrdDetilPemeriksaan_ResepObat_Batal"> Batal</MudButton>
+										</div>
+									</EditForm>
+								</CardContent>
+							</SfCard>
+						</div>
+					}
+						<div style="margin-top: 1vh !important; margin-bottom: 1vh !important">
+							<MudButton Variant="MudBlazor.Variant.Filled" StartIcon="@Icons.Material.Filled.OpenInBrowser" Color="Color.Info" OnClick="OnTampilkanFormDetilPemeriksaan_ResepObat">@TextButtonDetilPemeriksaan_ResepObat</MudButton>
+						</div>
+						<DxGrid Data="@DtDetilResepObat" KeyboardNavigationEnabled="true" AllowSelectRowByClick="true" AllowColumnReorder="true" AllowSort="true" ShowFilterRow="true"
+								SelectionMode="GridSelectionMode.Single" SelectedDataItemChanged="@GrdDetilPemeriksaan_ResepObat_DataDipilih">
+							<Columns>
+								@foreach(var item in _dtGrdDetilResepObat_AtributForm){
+								<DxGridDataColumn FieldName="@item.Field" Caption="@item.CaptionRekapitulasi" Visible="@item.TampilRekapitulasi" />
+							}
+							</Columns>
+						</DxGrid>
+					</div>
+				</ContentTemplate>
+			</TabItem>
+		</TabItems>
+	</SfTab>;
+}
+
+@code {
+	[Parameter]
+	public string IdFormAktif { get; set; }
+
+	public List<T0Pasien> DtPasien = new();
+	public List<uimT1Staf> DtDokter = new();
+
+	public List<uimT7Pemeriksaan_Diagnosa> DtDetilPemeriksaan_Diagnosa = new();
+	public List<uimT7Pemeriksaan_Tindakan> DtDetilPemeriksaan_Tindakan = new();
+
+	public uimT6ResepObat drResepObat = new();
+	public List<uimT7ResepObat> DtDetilResepObat = new();
+
+	public List<T0Diagnosa> DtDiagnosa = new();
+	public List<T0Tindakan> DtTindakan = new();
+	public List<T0Obat> DtObat = new();
+
+
+	private List<T1AtributForm> _dtGrdDetilPemeriksaan_Diagnosa_AtributForm = new();
+	private List<T1AtributForm> _dtGrdDetilPemeriksaan_Tindakan_AtributForm = new();
+	private List<T1AtributForm> _dtGrdDetilResepObat_AtributForm = new();
+
+
+	private List<T9DataOption> _dtFrekuensiObat = new();
+
+	PropertyInfo[]? pemeriksaanProperties;
+
+	protected override async Task OnInitializedAsync()
+	{
+		IdData = "Pemeriksaan";
+		IdForm = IdFormAktif;
+		dsRekapitulasi = new List<uimT6Pemeriksaan>();
+		dsRekapitulasi = await svcPemeriksaan.GetPemeriksaan();
+		DtPasien = await svcPasien.GetPasien();
+		DtDokter = await svcStaf.GetStafByJabatan("Dokter");
+		DtDiagnosa = await svcDiagnosa.GetDiagnosa();
+		DtTindakan = await svcTindakan.GetTindakan();
+		DtObat = await svcObat.GetObat();
+
+		//Load Atribut Form pada GrdDetil
+		_dtGrdDetilPemeriksaan_Diagnosa_AtributForm = (await svcForm.GetDataAtributForm("100202-01"));
+		_dtGrdDetilPemeriksaan_Tindakan_AtributForm = (await svcForm.GetDataAtributForm("100202-02"));
+		_dtGrdDetilResepObat_AtributForm = (await svcForm.GetDataAtributForm("100202-03"));
+
+		//Load Data Option
+		_dtFrekuensiObat = (await svcDataOption.GetDataOption("Frekuensi Obat"));
+
+		DataDipilih = new();
+		DtDetilPemeriksaan_Diagnosa = new();
+		DtDetilPemeriksaan_Tindakan = new();
+		DtDetilResepObat = new();
+		JudulDetil = "";
+
+		pemeriksaanProperties = DataDipilih.GetType().GetProperties();
+		this.StateHasChanged();
+	}
+
+	public override async void OnDataDipilih(Syncfusion.Blazor.Grids.RecordClickEventArgs<uimT6Pemeriksaan> args)
+	{
+		JudulDetil = $"MENGEDIT '{args.RowData.NoTransaksi}'";
+		base.OnDataDipilih(args);
+		pemeriksaanProperties = DataDipilih.GetType().GetProperties();
+
+		DtDetilPemeriksaan_Diagnosa = await svcPemeriksaan.GetDetilPemeriksaan_DiagnosaByIdPasien((Guid)args.RowData.IdPasien);
+		DtDetilPemeriksaan_Tindakan = await svcPemeriksaan.GetDetilPemeriksaan_TindakanByIdPasien((Guid)args.RowData.IdPasien);
+		DtDetilResepObat = await svcResepObat.GetDetilResepObatByIdPasien((Guid)args.RowData.IdPasien);
+
+		TampilkanFormDetilPemeriksaan_Diagnosa = false;
+		TampilkanFormDetilPemeriksaan_Tindakan = false;
+	}
+
+	public override async void OnSimpanData()
+	{
+		base.OnSimpanData();
+		var reply = false;
+		DataDipilih.Keterangan = $"TB: {DataDipilih.TinggiBadan} | BB: {DataDipilih.BeratBadan} | Tensi: {DataDipilih.TekananDarah}";
+		DataDipilih.ListT7PemeriksaanDiagnosa = DtDetilPemeriksaan_Diagnosa;
+		DataDipilih.ListT7PemeriksaanTindakan = DtDetilPemeriksaan_Tindakan;
+		DataDipilih.GrandTotal = DtTindakan.Sum(x => x.Harga);
+
+		var dataResepObatBaru = DtDetilResepObat.Where(x => x.Synchronise == "Data Baru").ToList();
+		reply = await svcPemeriksaan.UpdatePemeriksaan(DataDipilih);
+		if (reply && dataResepObatBaru.Count > 0)
+		{
+			dataResepObatBaru.ForEach(x => x.Synchronise = "Inserted");
+			drResepObat.IdPemeriksaan = DataDipilih.IdPemeriksaan;
+			drResepObat.Referensi_NoPemeriksaan = DataDipilih.NoTransaksi;
+			drResepObat.TanggalResep = DateTime.Now;
+			PropertyInfo[] valueProperties = drResepObat.GetType().GetProperties();
+			foreach (var property in pemeriksaanProperties)
+			{
+				var propertyValue = property.GetValue(DataDipilih);
+				var propertyToUpdate = valueProperties.FirstOrDefault(x => x.Name == $"{property.Name}");
+				if (propertyToUpdate is not null)
+				{
+					valueProperties.FirstOrDefault(x => x.Name == $"{property.Name}").SetValue(drResepObat, propertyValue);
+				}
+			}
+			drResepObat.GrandTotal = dataResepObatBaru.Sum(x => x.Total);
+			drResepObat.ListT7ResepObat = dataResepObatBaru;
+
+			svcResepObat.InsertResepObat(drResepObat);
+		}
+		if (reply)
+		{
+			await OnInitializedAsync();
+		}
+	}
+
+	public override void OnBatal_SimpanData()
+	{
+		base.OnBatal_SimpanData();
+		DataDipilih = new();
+	}
+
+	public async Task OnPanggilPasien(string nama, string noTransaksi)
+	{
+		var utterancet = new SpeechSynthesisUtterance
+			{
+				Text = $"Kepada saudara {nama} dengan nomor antrian {noTransaksi}, silahkan masuk ke ruang dokter untuk konsultasi. Terimakasih.",
+				Lang = "id-ID", // BCP 47 language tag
+				Pitch = 1.0, // 0.0 ~ 2.0 (Default 1.0)
+				Rate = 1.0, // 0.1 ~ 10.0 (Default 1.0)
+				Volume = 1.0, // 0.0 ~ 1.0 (Default 1.0)
+			};
+		await Speech.SpeakAsync(utterancet);
+	}
+
+	#region 'Detil Diagnosa'
+	public uimT7Pemeriksaan_Diagnosa drDetilPemeriksaan_Diagnosa = new();
+
+	public bool TampilkanFormDetilPemeriksaan_Diagnosa = false;
+	public string TextButtonDetilDetilPemeriksaan_Diagnosa = "Buka Form";
+
+	public virtual async void GrdDetilPemeriksaan_Diagnosa_DataDipilih(object data)
+	{
+		if (data is null) return;
+		drDetilPemeriksaan_Diagnosa = data as uimT7Pemeriksaan_Diagnosa;
+		if (drDetilPemeriksaan_Diagnosa.IdPemeriksaan == DataDipilih.IdPemeriksaan) { TampilkanFormDetilPemeriksaan_Diagnosa = true; TextButtonDetilDetilPemeriksaan_Diagnosa = "Tutup Form"; }
+		else { TampilkanFormDetilPemeriksaan_Diagnosa = false; TextButtonDetilDetilPemeriksaan_Diagnosa = "Buka Form"; }
+		StateHasChanged();
+	}
+
+	public async Task OnTampilkanFormDetilPemeriksaan_Diagnosa()
+	{
+		TampilkanFormDetilPemeriksaan_Diagnosa = !TampilkanFormDetilPemeriksaan_Diagnosa;
+		if (TampilkanFormDetilPemeriksaan_Diagnosa) TextButtonDetilDetilPemeriksaan_Diagnosa = "Tutup Form";
+		else TextButtonDetilDetilPemeriksaan_Diagnosa = "Buka Form";
+		drDetilPemeriksaan_Diagnosa = new();
+		this.StateHasChanged();
+	}
+
+	public async Task GrdDetilPemeriksaan_Diagnosa_Batal()
+	{
+		TampilkanFormDetilPemeriksaan_Diagnosa = false;
+		TextButtonDetilDetilPemeriksaan_Diagnosa = "Buka Form";
+		drDetilPemeriksaan_Diagnosa = new();
+		this.StateHasChanged();
+	}
+
+	public async Task GrdDetilPemeriksaan_Diagnosa_Simpan()
+	{
+		if (drDetilPemeriksaan_Diagnosa.IdPemeriksaan is null) { drDetilPemeriksaan_Diagnosa.IdPemeriksaan = DataDipilih.IdPemeriksaan; DtDetilPemeriksaan_Diagnosa.Add(drDetilPemeriksaan_Diagnosa); }
+		else
+		{
+			var dataLama = DtDetilPemeriksaan_Diagnosa.FirstOrDefault(x => x.IdDetilPemeriksaan == drDetilPemeriksaan_Diagnosa.IdDetilPemeriksaan);
+			DtDetilPemeriksaan_Diagnosa.Remove(dataLama);
+			DtDetilPemeriksaan_Diagnosa.Add(drDetilPemeriksaan_Diagnosa);
+		}
+		drDetilPemeriksaan_Diagnosa = new();
+		this.StateHasChanged();
+	}
+
+	public async void CmbDiagnosa_Dipilih(Guid? idDiagnosa)
+	{
+		if (idDiagnosa == null) return;
+		var value = DtDiagnosa.FirstOrDefault(x => x.IdDiagnosa == idDiagnosa);
+		drDetilPemeriksaan_Diagnosa.IdDiagnosa = idDiagnosa;
+		drDetilPemeriksaan_Diagnosa.Diagnosa_Nama = value.Nama;
+		drDetilPemeriksaan_Diagnosa.Diagnosa_Kode = value.Kode;
+		await InvokeAsync(StateHasChanged);
+	}
+	#endregion
+
+	#region 'Detil Tindakan'
+	public uimT7Pemeriksaan_Tindakan drDetilPemeriksaan_Tindakan = new();
+
+	public bool TampilkanFormDetilPemeriksaan_Tindakan = false;
+	public string TextButtonDetilDetilPemeriksaan_Tindakan = "Buka Form";
+
+	public virtual async void GrdDetilPemeriksaan_Tindakan_DataDipilih(object data)
+	{
+		if (data is null) return;
+		drDetilPemeriksaan_Tindakan = data as uimT7Pemeriksaan_Tindakan;
+		if (drDetilPemeriksaan_Tindakan.IdPemeriksaan == DataDipilih.IdPemeriksaan) { TampilkanFormDetilPemeriksaan_Tindakan = true; TextButtonDetilDetilPemeriksaan_Tindakan = "Tutup Form"; }
+		else { TampilkanFormDetilPemeriksaan_Tindakan = false; TextButtonDetilDetilPemeriksaan_Tindakan = "Buka Form"; }
+
+		StateHasChanged();
+	}
+
+	public async Task OnTampilkanFormDetilPemeriksaan_Tindakan()
+	{
+		TampilkanFormDetilPemeriksaan_Tindakan = !TampilkanFormDetilPemeriksaan_Tindakan;
+		if (TampilkanFormDetilPemeriksaan_Tindakan) TextButtonDetilDetilPemeriksaan_Tindakan = "Tutup Form";
+		else TextButtonDetilDetilPemeriksaan_Tindakan = "Buka Form";
+		drDetilPemeriksaan_Tindakan = new();
+		this.StateHasChanged();
+	}
+
+	public async Task GrdDetilPemeriksaan_Tindakan_Batal()
+	{
+		TampilkanFormDetilPemeriksaan_Tindakan = false;
+		TextButtonDetilDetilPemeriksaan_Tindakan = "Buka Form";
+		drDetilPemeriksaan_Tindakan = new();
+		this.StateHasChanged();
+	}
+
+	public async Task GrdDetilPemeriksaan_Tindakan_Simpan()
+	{
+		if (drDetilPemeriksaan_Tindakan.IdPemeriksaan is null) { drDetilPemeriksaan_Tindakan.IdPemeriksaan = DataDipilih.IdPemeriksaan; DtDetilPemeriksaan_Tindakan.Add(drDetilPemeriksaan_Tindakan); }
+		else
+		{
+			var dataLama = DtDetilPemeriksaan_Tindakan.FirstOrDefault(x => x.IdDetilPemeriksaan == drDetilPemeriksaan_Tindakan.IdDetilPemeriksaan);
+			DtDetilPemeriksaan_Tindakan.Remove(dataLama);
+			DtDetilPemeriksaan_Tindakan.Add(drDetilPemeriksaan_Tindakan);
+		}
+		drDetilPemeriksaan_Tindakan = new();
+		this.StateHasChanged();
+	}
+
+	public async void CmbTindakan_Dipilih(Guid? idTindakan)
+	{
+		if (idTindakan == null) return;
+		var value = DtTindakan.FirstOrDefault(x => x.IdTindakan == idTindakan);
+		drDetilPemeriksaan_Tindakan.IdTindakan = value.IdTindakan;
+		drDetilPemeriksaan_Tindakan.Tindakan_Nama = value.Nama;
+		drDetilPemeriksaan_Tindakan.Tindakan_Kode = value.Kode;
+		drDetilPemeriksaan_Tindakan.Tindakan_Harga = value.Harga;
+		//drDetilPemeriksaan.Total = value.Harga;
+		await InvokeAsync(StateHasChanged);
+	}
+	#endregion
+
+	#region 'Detil Obat'
+	public uimT7ResepObat drDetilResepObat = new();
+
+	public bool TampilkanFormDetilPemeriksaan_ResepObat = false;
+	public string TextButtonDetilPemeriksaan_ResepObat = "Buka Form";
+
+	public virtual async void GrdDetilPemeriksaan_ResepObat_DataDipilih(object data)
+	{
+		if (data is null) return;
+		drDetilResepObat = data as uimT7ResepObat;
+		if (drDetilResepObat.Synchronise == "Data Baru") { TampilkanFormDetilPemeriksaan_ResepObat = true; TextButtonDetilPemeriksaan_ResepObat = "Tutup Form"; }
+		else { TampilkanFormDetilPemeriksaan_ResepObat = false; TextButtonDetilPemeriksaan_ResepObat = "Buka Form"; }
+		StateHasChanged();
+	}
+
+	public async Task OnTampilkanFormDetilPemeriksaan_ResepObat()
+	{
+		TampilkanFormDetilPemeriksaan_ResepObat = !TampilkanFormDetilPemeriksaan_ResepObat;
+		if (TampilkanFormDetilPemeriksaan_ResepObat) TextButtonDetilPemeriksaan_ResepObat = "Tutup Form";
+		else TextButtonDetilPemeriksaan_ResepObat = "Buka Form";
+		drDetilResepObat = new();
+		this.StateHasChanged();
+	}
+
+	public async Task GrdDetilPemeriksaan_ResepObat_Batal()
+	{
+		TampilkanFormDetilPemeriksaan_ResepObat = false;
+		TextButtonDetilPemeriksaan_ResepObat = "Buka Form";
+		drDetilResepObat = new();
+		this.StateHasChanged();
+	}
+
+	public async Task GrdDetilPemeriksaan_ResepObat_Simpan()
+	{
+		if (drDetilResepObat.IdResepObat is null) { 
+			drDetilResepObat.IdResepObat = drResepObat.IdResepObat;
+			drDetilResepObat.Total = drDetilResepObat.Jumlah * drDetilResepObat.Obat_Harga;
+			drDetilResepObat.Synchronise = "Data Baru";
+			DtDetilResepObat.Add(drDetilResepObat); 
+		}
+		else
+		{
+			var dataLama = DtDetilResepObat.FirstOrDefault(x => x.IdDetilResepObat == drDetilResepObat.IdDetilResepObat);
+			DtDetilResepObat.Remove(dataLama);
+			DtDetilResepObat.Add(drDetilResepObat);
+		}
+		drDetilResepObat = new();
+		this.StateHasChanged();
+	}
+
+	public async void CmbObat_Dipilih(Guid? idObat)
+	{
+		if (idObat == null) return;
+		var value = DtObat.FirstOrDefault(x => x.IdObat == idObat);
+		drDetilResepObat.IdObat = value.IdObat;
+		drDetilResepObat.Obat_Nama = value.Nama;
+		drDetilResepObat.Obat_Kode = value.Kode;
+		drDetilResepObat.Obat_Harga = value.Harga;
+		await InvokeAsync(StateHasChanged);
+	}
+	#endregion
+}

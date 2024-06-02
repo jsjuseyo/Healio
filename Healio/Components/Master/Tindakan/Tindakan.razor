@@ -1,0 +1,107 @@
+﻿@page "/tindakan/{IdFormAktif}"
+@using Healio.Shared
+@using Syncfusion.Blazor.Data;
+@using bwaPolaris.Shared
+@inject svcTindakan svcTindakan
+@inherits Container_1<T0Tindakan, svcTindakan>
+
+@{
+	base.BuildRenderTree(__builder);
+	rfGrid_Detil = @<GridTemplates>
+		<DetailTemplate>
+			@{
+		var item = (context as T0Tindakan);
+				<SfGrid RowRenderingMode="@RowDirection.Vertical" EnableAdaptiveUI="true" DataSource="@dsRekapitulasi" Query="@(new Query().Where("IdTindakan", "equal", item.IdTindakan))">
+					<GridColumns>
+						@foreach (var item in AtributForm.Where(x => x.TampilMobile == false))
+				{
+						<GridColumn TextAlign="TextAlign.Center" Field="@item.Field" HeaderText="@item.CaptionRekapitulasi"></GridColumn>
+				}
+					</GridColumns>
+				</SfGrid>
+			}
+		</DetailTemplate>
+	</GridTemplates>
+	;
+	rfDetil =
+	@<div class="row">
+		<div class="col-md-6">
+			<SfTextBox Placeholder="Tindakan" @bind-Value="@DataDipilih.Nama" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+			<ValidationMessage For="@(() => DataDipilih.Nama)"></ValidationMessage>
+		</div>
+		<div class="col-md-6">
+			<SfTextBox Placeholder="Kode" @bind-Value="@DataDipilih.Kode" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+			<ValidationMessage For="@(() => DataDipilih.Kode)"></ValidationMessage>
+		</div>
+		<div class="col-md-6">
+			<SfNumericTextBox Placeholder="Harga" @bind-Value="@DataDipilih.Harga" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+			<ValidationMessage For="@(() => DataDipilih.Harga)"></ValidationMessage>
+		</div>
+		<div class="col-md-6">
+			<SfTextBox Placeholder="Keterangan" @bind-Value="@DataDipilih.Keterangan" Enabled="@EnableControl" FloatLabelType='@FloatLabelType.Auto' />
+			<ValidationMessage For="@(() => DataDipilih.Keterangan)"></ValidationMessage>
+		</div>
+	</div>;
+}
+
+@code {
+	[Parameter]
+	public string IdFormAktif { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		IdData = "Tindakan";
+		IdForm = IdFormAktif;
+		dsRekapitulasi = new List<T0Tindakan>();
+		dsRekapitulasi = await svcTindakan.GetTindakan();
+		DataDipilih = new();
+		JudulDetil = "";
+		this.StateHasChanged();
+	}
+
+	public override void OnDataDipilih(Syncfusion.Blazor.Grids.RecordClickEventArgs<T0Tindakan> args)
+	{
+		JudulDetil = $"MENGEDIT '{args.RowData.Nama}'";
+		base.OnDataDipilih(args);
+	}
+
+	public override void OnDataBaru()
+	{
+		base.OnDataBaru();
+		DataDipilih = new();
+	}
+
+	public override async void OnSimpanData()
+	{
+		base.OnSimpanData();
+		var reply = false;
+		if (JudulDetil.Contains("DATA BARU"))
+		{
+			reply = await svcTindakan.InsertTindakan(DataDipilih);
+		}
+		else
+		{
+			reply = await svcTindakan.UpdateTindakan(DataDipilih);
+		}
+		if (reply)
+		{
+			await OnInitializedAsync();
+		}
+	}
+
+	public override async void OnHapusData()
+	{
+		base.OnHapusData();
+		var reply = await svcTindakan.DeleteTindakan(DataDipilih);
+		if (reply)
+		{
+			await OnInitializedAsync();
+		}
+	}
+
+	public override void OnBatal_SimpanData()
+	{
+		base.OnBatal_SimpanData();
+		DataDipilih = new();
+	}
+}

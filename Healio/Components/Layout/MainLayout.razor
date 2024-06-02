@@ -1,0 +1,103 @@
+﻿@inherits LayoutComponentBase
+@using Syncfusion.Blazor.Navigations
+@using Syncfusion.Blazor.Inputs
+@inject NavigationManager nm
+@inject svcForm svcForm
+@inject svcBaseService bases
+@inject svcPrivileges svcPrivileges
+@using static Polaris.Utility.modVariabel;
+
+<MudThemeProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => Toggle())" />
+        <MudText Typo="Typo.h5" Class="ml-3">Healio</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Edge="Edge.End" OnClick="ProsesLogout" />
+    </MudAppBar>
+    <MudDrawer @bind-Open="@SidebarToggle" ClipMode="DrawerClipMode.Always" Elevation="2">
+        @*NavMenu*@
+        <SfTreeView CssClass="main-treeview" ExpandOn="@Expand" TValue="TreeData" AllowMultiSelection=false>
+            <TreeViewFieldsSettings Id="NodeId" Selected="IsSelected" Text="NodeText" IconCss="Icon" DataSource="@_menu" HasChildren="HasChild" ParentID="Pid" />
+            <TreeViewEvents TValue="TreeData" NodeSelected="OnMenuDipilih"></TreeViewEvents>
+        </SfTreeView>
+    </MudDrawer>
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    // Specifies the value of TreeView component ExpanOn property.
+    public ExpandAction Expand = ExpandAction.Click;
+    // Specify the value of Sidebar component state. It indicates whether the sidebar component is in an open/close state.
+    public bool SidebarToggle = true;
+    // Specifies the value of Sidebar HTMLAttribute property.
+    Dictionary<string, object> HtmlAttribute = new Dictionary<string, object>()
+    {
+        {"class", "sidebar-treeview" }
+    };
+    public void Toggle()
+    {
+        SidebarToggle = !SidebarToggle;
+    }
+
+    private List<TreeData> _menu { get; set; } = new List<TreeData>();
+    protected override async void OnInitialized()
+    {
+         var namaUser = bases.User.Nama;
+         var idUser = bases.User.IdUser;
+         if (namaUser == "AUTO") bases.DaftarForm = await svcForm.GetDataForm();
+         else { bases.DaftarForm = await svcForm.GetDataFormByIdUser(idUser); }
+        //bases.DaftarForm = await svcForm.GetDataForm();
+        _menu.Add(new TreeData { NodeId = "0", NodeText = "Dashboard", Href = "/", Icon = "", IsSelected = true });
+        foreach (var item in bases.DaftarForm)
+        {
+            if (item.IdParent == "")
+            {
+                _menu.Add(new TreeData { NodeId = item.IdForm, NodeText = item.Form, Href = item.Url, Icon = item.Icon, HasChild = (bool)item.HasChild });
+            }
+            else
+            {
+                _menu.Add(new TreeData { NodeId = item.IdForm, NodeText = item.Form, Href = item.Url, Icon = item.Icon, HasChild = (bool)item.HasChild, Pid = item.IdParent });
+            }
+            this.StateHasChanged();
+        }
+    }
+
+    void OnMenuDipilih(NodeSelectEventArgs args)
+    {
+        var data = _menu.FirstOrDefault(x => x.NodeId == args.NodeData.Id);
+        if (!string.IsNullOrEmpty(data.Href))
+        {
+            //NavigationManager.NavigateTo($"{data.Href}");
+            nm.NavigateTo($"{data.Href}/{data.NodeId}");
+            data.IsSelected = true;
+            this.StateHasChanged();
+        }
+
+    }
+
+    void ProsesLogout()
+    {
+        //Preferences.Remove("ID");
+        nm.NavigateTo("/");
+    }
+
+    void TampilkanProfil()
+    {
+        nm.NavigateTo("/profil");
+    }
+
+    public class TreeData
+    {
+        public string NodeId { get; set; }
+        public string NodeText { get; set; }
+        public string Icon { get; set; }
+        public bool HasChild { get; set; }
+        public string Pid { get; set; }
+        public string Href { get; set; }
+        public bool IsSelected { get; set; }
+    }
+}
